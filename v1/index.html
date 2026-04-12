@@ -1,0 +1,2230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>FinStatement Quest</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#08080f;font-family:'Space Mono',monospace;overflow:hidden;color:#fff;touch-action:none;user-select:none;-webkit-user-select:none;}
+canvas{display:block;position:absolute;top:0;left:0;z-index:1;}
+.screen{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;pointer-events:all;z-index:10;}
+.screen.hidden{display:none!important;}
+#ss{background:linear-gradient(160deg,#08080f 0%,#0c1220 60%,#08080f 100%);}
+.gt{font-family:'Syne',sans-serif;font-size:clamp(2rem,6vw,4rem);font-weight:800;color:#f0c040;letter-spacing:-2px;line-height:1;text-align:center;text-shadow:0 0 60px rgba(240,192,64,.3);}
+.gs{font-size:clamp(.6rem,1.6vw,.8rem);color:#7dd3fc;letter-spacing:.2em;text-transform:uppercase;margin:8px 0 18px;text-align:center;}
+.card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:16px 20px;margin:10px 0;max-width:480px;width:100%;text-align:left;}
+.card h3{color:#f0c040;font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;margin-bottom:9px;}
+.card li{color:#94a3b8;font-size:.78rem;margin:5px 0;list-style:none;padding-left:14px;position:relative;line-height:1.5;}
+.card li::before{content:'›';position:absolute;left:0;color:#4ade80;}
+.btn{display:inline-block;padding:11px 30px;background:#f0c040;color:#08080f;border:none;border-radius:5px;font-size:.82rem;font-weight:700;font-family:'Space Mono',monospace;cursor:pointer;margin:5px;transition:transform .1s,box-shadow .15s;letter-spacing:.03em;}
+.btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(240,192,64,.3);}
+.btn:active{transform:scale(.97);}
+.btn.out{background:transparent;color:#7dd3fc;border:1.5px solid rgba(125,211,252,.3);}
+.btn.out:hover{background:rgba(125,211,252,.07);box-shadow:none;}
+.hint{font-size:.7rem;color:#475569;margin-top:10px;text-align:center;letter-spacing:.05em;}
+#hud{position:absolute;top:0;left:0;width:100%;height:46px;padding:0 16px;display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,.7);border-bottom:1px solid rgba(255,255,255,.05);pointer-events:none;z-index:15;}
+#hud.hidden{display:none;}
+.hl{font-family:'Syne',sans-serif;font-size:.78rem;font-weight:700;color:#f0c040;max-width:40%;}
+.hv{color:#f87171;font-size:.82rem;letter-spacing:3px;}
+.hs{color:#4ade80;font-size:.78rem;}
+#flash{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;opacity:0;z-index:12;}
+@keyframes fr{0%{opacity:.6}100%{opacity:0}}
+@keyframes fg{0%{opacity:.4}100%{opacity:0}}
+#tz{position:absolute;top:46px;left:0;width:100%;height:calc(100% - 46px);cursor:pointer;display:none;z-index:9;}
+#tz.on{display:block;}
+.taphint{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);font-size:.66rem;color:rgba(255,255,255,.18);letter-spacing:.1em;text-transform:uppercase;pointer-events:none;animation:ph 2s ease-in-out infinite;}
+@keyframes ph{0%,100%{opacity:.18}50%{opacity:.5}}
+#qov{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(2,4,14,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;pointer-events:all;z-index:20;}
+#qov.hidden{display:none;pointer-events:none;}
+.qbox{max-width:540px;width:100%;}
+.qbadge{font-size:.66rem;text-transform:uppercase;letter-spacing:.12em;color:#7dd3fc;margin-bottom:9px;}
+.qtext{font-family:'Syne',sans-serif;font-size:clamp(.9rem,2.4vw,1.15rem);color:#f1f5f9;line-height:1.45;margin-bottom:18px;font-weight:700;}
+.qopts{display:flex;flex-direction:column;gap:8px;}
+.qopt{background:#0b1220;border:1.5px solid #1a2535;border-radius:7px;padding:11px 14px;cursor:pointer;color:#4a5568;font-size:.81rem;font-family:'Space Mono',monospace;transition:all .12s;text-align:left;width:100%;}
+.qopt:hover{border-color:#7dd3fc;background:#0a1c30;color:#e2e8f0;}
+.qopt.correct{border-color:#4ade80!important;background:#011508!important;color:#4ade80!important;}
+.qopt.wrong{border-color:#f87171!important;background:#1a0505!important;color:#f87171!important;}
+.qopt.disabled{pointer-events:none;}
+.qexpl{margin-top:12px;background:#0b1220;border-left:3px solid #7dd3fc;border-radius:0 6px 6px 0;padding:11px 14px;color:#334155;font-size:.78rem;line-height:1.6;display:none;white-space:pre-line;}
+.qexpl.show{display:block;}
+#qcont{margin-top:12px;display:none;}
+#qcont.show{display:inline-block;}
+#lc{background:rgba(2,4,14,.97);}
+.lcicon{font-size:2.8rem;margin-bottom:4px;}
+.pbar{width:100%;max-width:340px;height:5px;background:#0b1220;border-radius:3px;margin:12px 0;overflow:hidden;}
+.pfill{height:100%;background:linear-gradient(90deg,#7dd3fc,#4ade80);border-radius:3px;transition:width .5s ease;}
+#go,#gw{background:rgba(2,2,10,.98);}
+/* checkpoint badge */
+.cpbadge{background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);border-radius:20px;padding:4px 14px;font-size:.72rem;color:#fbbf24;margin-bottom:10px;display:inline-block;}
+/* bonus question styling */
+.bonusbadge{background:rgba(250,204,21,.2);border:1.5px solid rgba(250,204,21,.6);border-radius:20px;padding:4px 14px;font-size:.72rem;color:#fde047;margin-bottom:10px;display:inline-block;letter-spacing:.06em;}
+#qov.bonus-mode{background:rgba(20,14,2,.97);}
+#qov.bonus-mode .qbox{border:1.5px solid rgba(250,204,21,.25);border-radius:12px;padding:20px;}
+#qov.bonus-mode .qtext{color:#fef9c3;}
+#qov.bonus-mode #qcont{background:#ca8a04;color:#fff;}
+#qov.bonus-mode #qcont:hover{background:#a16207;}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="flash"></div>
+<div id="hud" class="hidden">
+  <span class="hl" id="hl">Level 1</span>
+  <span class="hv" id="hv">♥ ♥ ♥</span>
+  <span class="hs" id="hs">0 pts</span>
+</div>
+<div id="tz">
+  <div class="taphint">Tap · Space · ↑ to jump &nbsp;|&nbsp; Double-tap = double jump</div>
+</div>
+
+<!-- START -->
+<div id="ss" class="screen">
+  <div class="gt">FinStatement<br>Quest</div>
+  <div class="gs">Financial Statements · MBA Core</div>
+  <div class="card">
+    <h3>Learning Objectives</h3>
+    <ul>
+      <li>Identify the three core financial statements</li>
+      <li>Classify Balance Sheet, Income Statement &amp; Cash Flow items</li>
+      <li>Understand the fundamental accounting equation</li>
+      <li>Apply accrual vs. cash-basis concepts</li>
+      <li>Interpret key financial ratios and working capital</li>
+    </ul>
+  </div>
+  <p style="color:#64748b;font-size:.74rem;max-width:420px;text-align:center;line-height:1.6;margin-bottom:14px;">Auto-scroller. <strong style="color:#f0c040">Tap / Space</strong> to jump. Double-tap for double jump. Hit checkpoints to answer accounting questions. Reach the gate to finish the level.</p>
+  <div>
+    <button class="btn" onclick="startGame()">Play Now</button>
+    <button class="btn out" onclick="SS('isc');HS('ss')">How to Play</button>
+  </div>
+  <div class="hint">3 lives · 10 hand-crafted levels · checkpoints mid-level</div>
+  <div style="margin-top:22px;text-align:center;display:flex;flex-direction:column;gap:4px;">
+    <div style="font-size:.62rem;color:#1e293b;letter-spacing:.08em;">v1.4 · Auburn University MBA Program · Built with Claude (Anthropic)</div>
+  </div>
+</div>
+
+<!-- INSTRUCTIONS -->
+<div id="isc" class="screen hidden">
+  <div class="gt" style="font-size:clamp(1.3rem,4vw,2.2rem)">How to Play</div>
+  <div class="card" style="max-width:440px;margin-top:16px;">
+    <h3>Controls</h3>
+    <ul>
+      <li>Tap / Click / Space / ↑ — Jump</li>
+      <li>Double-tap quickly — Double jump</li>
+      <li>World scrolls right automatically</li>
+    </ul>
+    <h3 style="margin-top:12px">Hazards — level resets to last checkpoint, no life lost</h3>
+    <ul>
+      <li>Gaps — fall in to reset</li>
+      <li>Floor spikes — touch to reset</li>
+      <li>Ceiling spikes — appear from level 4 onward</li>
+      <li>Moving platforms — time your jump</li>
+    </ul>
+    <h3 style="margin-top:12px">Checkpoints &amp; Gate</h3>
+    <ul>
+      <li>Levels 1–5: one checkpoint midway through</li>
+      <li>Levels 6–8: two checkpoints</li>
+      <li>Levels 9–10: four checkpoints</li>
+      <li>Wrong checkpoint answer → lose a life, retry from that checkpoint</li>
+      <li>Reach the gate → level complete!</li>
+      <li>★ Bonus CPs (levels 4, 7 &amp; 10): answer a Hard bonus question for an extra life!</li>
+    </ul>
+  </div>
+  <button class="btn" onclick="SS('ss');HS('isc')">Back</button>
+</div>
+
+<!-- QUESTION -->
+<div id="qov" class="hidden">
+  <div class="qbox">
+    <div class="cpbadge" id="qtype">Checkpoint</div>
+    <div class="qbadge" id="qbadge">Level 1 · Checkpoint 1</div>
+    <div class="qtext" id="qtext"></div>
+    <div class="qopts" id="qopts"></div>
+    <div class="qexpl" id="qexpl"></div>
+    <button class="btn" id="qcont" onclick="afterQ()">Continue →</button>
+  </div>
+</div>
+
+<!-- LEVEL COMPLETE -->
+<div id="lc" class="screen hidden">
+  <div class="lcicon">🏆</div>
+  <div class="gt" style="font-size:clamp(1.5rem,5vw,2.6rem)">Level Clear!</div>
+  <div style="color:#7dd3fc;font-size:.82rem;margin-top:5px;" id="lcn"></div>
+  <div class="pbar"><div class="pfill" id="lpf" style="width:10%"></div></div>
+  <div style="color:#4ade80;font-size:.85rem;margin-bottom:16px;" id="lcs"></div>
+  <button class="btn" onclick="nextLevel()">Next Level →</button>
+</div>
+
+<!-- GAME OVER -->
+<div id="go" class="screen hidden">
+  <div style="font-size:2.6rem">💸</div>
+  <div class="gt" style="color:#f87171;font-size:clamp(1.5rem,5vw,2.6rem)">Bankrupt!</div>
+  <p style="color:#1e293b;font-size:.74rem;max-width:360px;text-align:center;margin:12px 0 20px;line-height:1.6">Out of lives. Review your financial statements notes and try again!</p>
+  <button class="btn" onclick="restartGame()">Try Again</button>
+  <button class="btn out" onclick="SS('ss');HS('go')">Main Menu</button>
+</div>
+
+<!-- WIN -->
+<div id="gw" class="screen hidden">
+  <div style="font-size:2.6rem">🎓</div>
+  <div class="gt" style="font-size:clamp(1.5rem,5vw,2.6rem)">Graduated!</div>
+  <div style="color:#7dd3fc;font-size:.75rem;margin:7px 0 3px;letter-spacing:.12em">FINANCIAL STATEMENTS MASTERED</div>
+  <div style="color:#4ade80;font-size:.9rem;margin:7px 0 16px;" id="wsc"></div>
+  <p style="color:#1e293b;font-size:.72rem;max-width:380px;text-align:center;line-height:1.6;margin-bottom:16px">Strong command of the Balance Sheet, Income Statement, and Cash Flow Statement — the three pillars of financial reporting.</p>
+  <button class="btn" onclick="restartGame()">Play Again</button>
+  <button class="btn out" onclick="SS('ss');HS('gw')">Main Menu</button>
+</div>
+
+<script>
+const SS=id=>document.getElementById(id).classList.remove('hidden');
+const HS=id=>document.getElementById(id).classList.add('hidden');
+
+// ─── QUESTION BANK (50 questions: E=easy, M=medium, H=hard) ─────────────────
+// Each: q=question, d=difficulty, o=options[4], a=correct index,
+//        e=correct explanation, oe=per-option explanations
+const QB=[
+
+// ── EASY (0-16) ────────────────────────────────────────────────────────────
+{d:'E',
+ q:"Which financial statement shows a company's assets, liabilities, and equity at a specific point in time?",
+ o:["Income Statement","Cash Flow Statement","Balance Sheet","Statement of Retained Earnings"],
+ a:2,
+ e:"The Balance Sheet is a snapshot — it shows what the company owns (assets), owes (liabilities), and the owners' residual interest (equity) on a single date.",
+ oe:["The Income Statement shows revenues and expenses over a period — not a point-in-time snapshot.",
+     "The Cash Flow Statement shows cash inflows and outflows over a period — not a snapshot of position.",
+     "Correct! The Balance Sheet is the point-in-time snapshot statement.",
+     "The Statement of Retained Earnings shows changes in retained earnings over a period — not a snapshot of all assets and liabilities."]},
+
+{d:'E',
+ q:"Which financial statement reports revenues and expenses over a period of time?",
+ o:["Balance Sheet","Income Statement","Cash Flow Statement","Statement of Equity"],
+ a:1,
+ e:"The Income Statement (also called the P&L) summarizes revenues earned and expenses incurred over an accounting period, showing whether the company made a profit or a loss.",
+ oe:["The Balance Sheet is a point-in-time snapshot of assets, liabilities, and equity — it does not show revenues or expenses.",
+     "Correct! The Income Statement reports revenues and expenses over a period.",
+     "The Cash Flow Statement tracks actual cash movements — not revenues or expenses on an accrual basis.",
+     "The Statement of Equity shows changes in equity accounts — not revenues or expenses."]},
+
+{d:'E',
+ q:"The fundamental accounting equation is:",
+ o:["Revenue − Expenses = Net Income","Assets = Liabilities + Equity","Cash In − Cash Out = Net Cash","Gross Profit − Operating Expenses = Operating Income"],
+ a:1,
+ e:"Assets = Liabilities + Equity is the bedrock of double-entry accounting. Every transaction must keep this equation balanced — which is why the statement is called the 'Balance Sheet.'",
+ oe:["This describes the Income Statement logic — it tells you about profitability, not the balance sheet.",
+     "Correct! Assets = Liabilities + Equity is the fundamental accounting equation.",
+     "This describes net cash flow — a useful concept, but not the core accounting equation.",
+     "This is the operating income formula — a subset of the Income Statement, not the accounting equation."]},
+
+{d:'E',
+ q:"Which of the following is a current asset?",
+ o:["Building","Patent","Equipment","Accounts Receivable"],
+ a:3,
+ e:"Accounts Receivable is a current asset — it is expected to be collected (converted to cash) within one year. Buildings, patents, and equipment are all long-term assets.",
+ oe:["A building is a long-term tangible asset — it is depreciated over many years.",
+     "A patent is a long-term intangible asset — it provides value over multiple years.",
+     "Equipment is a long-term tangible asset — it is depreciated over its useful life.",
+     "Correct! Accounts Receivable is a current asset expected to be collected within one year."]},
+
+{d:'E',
+ q:"Gross Profit is calculated as:",
+ o:["Revenue − All Operating Expenses","Net Sales − Cost of Goods Sold","Net Income + Income Taxes","Revenue − Interest Expense"],
+ a:1,
+ e:"Gross Profit = Net Sales − Cost of Goods Sold (COGS). It shows how profitable core sales are before overhead, interest, and taxes are factored in.",
+ oe:["Subtracting all operating expenses gives Operating Income — not Gross Profit. Gross Profit only deducts COGS.",
+     "Correct! Gross Profit = Net Sales − Cost of Goods Sold.",
+     "Adding taxes back to Net Income gives pre-tax income — not Gross Profit.",
+     "Subtracting interest from revenue skips COGS entirely and gives a meaningless figure."]},
+
+{d:'E',
+ q:"Which Cash Flow section includes cash paid for dividends to shareholders?",
+ o:["Operating Activities","Investing Activities","Non-cash Disclosures","Financing Activities"],
+ a:3,
+ e:"Paying dividends is a Financing Activity because it represents returning cash to equity holders — part of how the company manages its capital structure.",
+ oe:["Operating Activities cover day-to-day business cash flows like receipts from customers — not distributions to shareholders.",
+     "Investing Activities cover buying and selling long-term assets — dividends are not an investment decision.",
+     "Non-cash disclosures cover transactions that involve no cash — dividend payments are actual cash outflows.",
+     "Correct! Paying dividends is a Financing Activity."]},
+
+{d:'E',
+ q:"Under accrual accounting, revenue is recognized when:",
+ o:["Cash is received from the customer","The customer signs a contract","Goods or services are delivered to the customer","An invoice is sent"],
+ a:2,
+ e:"Accrual accounting recognizes revenue when it is earned — i.e., when goods or services are delivered — regardless of when cash is actually received.",
+ oe:["Cash-basis accounting waits for cash. Accrual accounting does not — revenue is earned upon delivery.",
+     "Signing a contract creates an obligation, but revenue is earned as goods or services are delivered — not at signing.",
+     "Correct! Revenue is recognized when goods or services are delivered.",
+     "Sending an invoice is an administrative step — revenue is earned upon delivery, not when paperwork is sent."]},
+
+{d:'E',
+ q:"Which of the following appears on the Balance Sheet as part of equity?",
+ o:["Depreciation Expense","Accounts Payable","Cost of Goods Sold","Retained Earnings"],
+ a:3,
+ e:"Retained Earnings is an equity account on the Balance Sheet — it accumulates net income over time, reduced by any dividends paid out.",
+ oe:["Depreciation Expense is an Income Statement item — it reduces operating income period by period.",
+     "Accounts Payable is a current liability on the Balance Sheet — not part of equity.",
+     "Cost of Goods Sold is an Income Statement expense — it is deducted from revenue to get Gross Profit.",
+     "Correct! Retained Earnings is an equity component on the Balance Sheet."]},
+
+{d:'E',
+ q:"A company has Assets of $400,000 and Liabilities of $150,000. What is Shareholders' Equity?",
+ o:["$550,000","$150,000","$400,000","$250,000"],
+ a:3,
+ e:"From the accounting equation: Equity = Assets − Liabilities = $400,000 − $150,000 = $250,000.",
+ oe:["$550,000 adds Assets and Liabilities — that is the wrong operation.",
+     "$150,000 is the Liabilities balance — equity is what remains after subtracting liabilities from assets.",
+     "$400,000 is total Assets — equity is only the residual after liabilities are removed.",
+     "Correct! Equity = $400,000 − $150,000 = $250,000."]},
+
+{d:'E',
+ q:"Net Income is commonly called:",
+ o:["The top line","Gross Profit","The bottom line","Operating Income"],
+ a:2,
+ e:"Net Income is called 'the bottom line' because it is literally the last (bottom) line of the Income Statement after all revenues, expenses, and taxes.",
+ oe:["'The top line' refers to Revenue — the first line of the Income Statement.",
+     "Gross Profit is an intermediate line — it appears after deducting COGS but before operating expenses.",
+     "Correct! Net Income is 'the bottom line.'",
+     "Operating Income is also an intermediate line — it appears before interest and taxes."]},
+
+{d:'E',
+ q:"Which of the following is a long-term liability?",
+ o:["Accounts Payable","Accrued Wages","Unearned Revenue (due next month)","Bonds Payable due in 10 years"],
+ a:3,
+ e:"Bonds Payable due in 10 years is a long-term (non-current) liability — it will not be repaid within 12 months. The others are all current liabilities.",
+ oe:["Accounts Payable is a current liability — typically due within 30-60 days.",
+     "Accrued Wages is a current liability — owed to employees in the near term.",
+     "Unearned Revenue expected to be earned within one month is a current liability.",
+     "Correct! Bonds due in 10 years are a long-term liability."]},
+
+{d:'E',
+ q:"Which Cash Flow section includes the purchase of equipment?",
+ o:["Operating Activities","Financing Activities","Non-cash Disclosures","Investing Activities"],
+ a:3,
+ e:"Buying long-term assets like equipment is an Investing Activity — it represents deploying capital into the company's productive capacity.",
+ oe:["Operating Activities cover day-to-day revenue-generating activities — equipment purchases are capital expenditures, not operations.",
+     "Financing Activities cover debt and equity transactions — buying equipment is not a financing decision.",
+     "Non-cash disclosures cover transactions with no cash involved — paying cash for equipment IS a cash outflow.",
+     "Correct! Purchasing equipment is an Investing Activity (capital expenditure)."]},
+
+{d:'E',
+ q:"Working Capital is defined as:",
+ o:["Total Assets − Total Liabilities","Net Income + Depreciation","Current Assets ÷ Current Liabilities","Current Assets − Current Liabilities"],
+ a:3,
+ e:"Working Capital = Current Assets − Current Liabilities. It measures the net short-term resources available to fund day-to-day operations.",
+ oe:["Total Assets − Total Liabilities = Total Equity — a balance-sheet-wide measure, not working capital.",
+     "Net Income + Depreciation approximates operating cash flow — not working capital.",
+     "Current Assets ÷ Current Liabilities is the Current Ratio — a ratio, not a dollar amount.",
+     "Correct! Working Capital = Current Assets − Current Liabilities."]},
+
+{d:'E',
+ q:"Retained Earnings increases when a company:",
+ o:["Pays dividends to shareholders","Issues new shares of stock","Reports a net loss","Reports a net profit"],
+ a:3,
+ e:"Retained Earnings = Prior Balance + Net Income − Dividends. A net profit adds to retained earnings; dividends and net losses reduce it.",
+ oe:["Paying dividends reduces Retained Earnings — cash is distributed to shareholders.",
+     "Issuing shares increases Paid-in Capital (a separate equity account) — not retained earnings directly.",
+     "A net loss reduces Retained Earnings.",
+     "Correct! A net profit increases Retained Earnings."]},
+
+{d:'E',
+ q:"Which of the following is NOT one of the three core financial statements?",
+ o:["Balance Sheet","Income Statement","Chart of Accounts","Cash Flow Statement"],
+ a:2,
+ e:"The Chart of Accounts is a list of all account names used in a company's general ledger — it is an internal bookkeeping tool, not a financial statement.",
+ oe:["The Balance Sheet is one of the three core financial statements.",
+     "The Income Statement is one of the three core financial statements.",
+     "Correct! The Chart of Accounts is an internal tool, not a financial statement.",
+     "The Cash Flow Statement is one of the three core financial statements."]},
+
+{d:'E',
+ q:"Issuing common stock for cash appears on the Cash Flow Statement under:",
+ o:["Operating Activities","Investing Activities","Financing Activities","It does not appear on the Cash Flow Statement"],
+ a:2,
+ e:"Issuing stock raises equity capital — a Financing Activity. The cash received is a positive cash inflow in the Financing section.",
+ oe:["Issuing stock is not a day-to-day business operation.",
+     "Issuing stock is not a capital expenditure — it is a capital-raising activity.",
+     "Correct! Issuing common stock is a Financing Activity.",
+     "All significant cash transactions appear on the Cash Flow Statement — including stock issuances."]},
+
+{d:'E',
+ q:"Revenue is sometimes called:",
+ o:["Gross Profit","The bottom line","Operating Income","The top line"],
+ a:3,
+ e:"Revenue (total sales) is called 'the top line' because it is the first line of the Income Statement, before any costs are deducted.",
+ oe:["Gross Profit is Revenue minus COGS — it is an intermediate profitability line.",
+     "'The bottom line' refers to Net Income — after all expenses.",
+     "Operating Income is Revenue minus COGS and operating expenses — not the same as Revenue.",
+     "Correct! Revenue is 'the top line' of the Income Statement."]},
+
+// ── MEDIUM (17-33) ─────────────────────────────────────────────────────────
+{d:'M',
+ q:"Under the indirect method, depreciation is added back to Net Income in Operating Activities because:",
+ o:["It is a cash receipt","It reduced net income but required no cash outflow","It is an investing activity","It must be reclassified to financing"],
+ a:1,
+ e:"Depreciation is a non-cash expense — it reduced net income on the Income Statement, but no cash left the business. Adding it back converts accrual net income to operating cash flow.",
+ oe:["Depreciation is an expense — not a cash receipt.",
+     "Correct! Depreciation reduced net income but used no cash, so it is added back.",
+     "Depreciation is an operating expense — it stays in Operating Activities.",
+     "Depreciation has nothing to do with financing."]},
+
+{d:'M',
+ q:"The Current Ratio is calculated as:",
+ o:["Net Income ÷ Revenue","Current Assets ÷ Current Liabilities","Total Debt ÷ Total Equity","Cash ÷ Total Liabilities"],
+ a:1,
+ e:"Current Ratio = Current Assets ÷ Current Liabilities. A ratio above 1.0 means the company has more short-term assets than short-term obligations — indicating adequate short-term liquidity.",
+ oe:["Net Income ÷ Revenue is the Net Profit Margin — a profitability ratio.",
+     "Correct! Current Ratio = Current Assets ÷ Current Liabilities.",
+     "Total Debt ÷ Total Equity is the Debt-to-Equity ratio — a measure of financial leverage.",
+     "Cash ÷ Total Liabilities is not a standard ratio — the Current Ratio uses all current assets, not just cash."]},
+
+{d:'M',
+ q:"Deferred Revenue appears on the Balance Sheet as:",
+ o:["A long-term asset","A current asset","Shareholders' equity","A current liability"],
+ a:3,
+ e:"Deferred Revenue is a liability — the company has received cash but has not yet earned it by delivering the product or service. It represents an obligation to perform.",
+ oe:["Deferred Revenue is an obligation — a liability, not an asset of any kind.",
+     "Although cash was received, it hasn't been earned yet — it is a liability, not an asset.",
+     "Deferred Revenue is not equity — it has not been earned and cannot belong to shareholders yet.",
+     "Correct! Deferred Revenue is a current liability — an unfulfilled obligation to deliver goods or services."]},
+
+{d:'M',
+ q:"Which of the following increases total assets AND total liabilities simultaneously?",
+ o:["Paying off Accounts Payable with cash","Purchasing equipment with cash","Collecting Accounts Receivable","Borrowing cash from a bank"],
+ a:3,
+ e:"Borrowing from a bank increases Cash (an asset) and creates a Loan Payable (a liability) — both sides of the accounting equation increase by the same amount.",
+ oe:["Paying AP decreases both Cash (asset) and AP (liability) — both sides decrease.",
+     "Buying equipment with cash swaps one asset (cash) for another (equipment) — total assets unchanged, liabilities unchanged.",
+     "Collecting AR swaps AR for cash — one asset for another. Total assets and liabilities are unchanged.",
+     "Correct! A bank loan increases Cash (asset) and Loans Payable (liability) simultaneously."]},
+
+{d:'M',
+ q:"Which inventory method results in higher Cost of Goods Sold during periods of rising prices?",
+ o:["FIFO (First-In, First-Out)","Weighted Average","LIFO (Last-In, First-Out)","Specific Identification"],
+ a:2,
+ e:"Under LIFO, the most recently purchased (most expensive) items are assumed sold first — resulting in higher COGS and lower gross profit during inflationary periods.",
+ oe:["FIFO sells the oldest (cheapest) inventory first — lower COGS and higher gross profit during inflation.",
+     "Weighted Average uses a blended cost — results fall between FIFO and LIFO.",
+     "Correct! LIFO assumes the newest (most expensive) items are sold first, giving the highest COGS when prices rise.",
+     "Specific Identification assigns actual costs to specific units — results depend on which specific units are sold."]},
+
+{d:'M',
+ q:"Free Cash Flow is generally calculated as:",
+ o:["Net Income − Dividends","EBITDA minus taxes","Revenue − Total Expenses","Operating Cash Flow − Capital Expenditures"],
+ a:3,
+ e:"Free Cash Flow = Operating Cash Flow − Capital Expenditures. It represents the cash the business generates after maintaining and growing its asset base — available for debt repayment, dividends, or reinvestment.",
+ oe:["Net Income − Dividends approximates retained earnings — not free cash flow.",
+     "EBITDA minus taxes is a rough approximation but misses working capital and CapEx — it is not the standard FCF formula.",
+     "Revenue − Total Expenses is approximately Net Income — not free cash flow.",
+     "Correct! FCF = Operating Cash Flow − Capital Expenditures."]},
+
+{d:'M',
+ q:"An increase in Accounts Receivable is treated how in the indirect method Cash Flow Statement?",
+ o:["Added to net income — you earned more revenue","Subtracted from net income — cash was not yet collected","No effect — AR is not a cash item","Added to investing activities"],
+ a:1,
+ e:"An increase in AR means more revenue was recognized than cash collected. Under the indirect method, this is subtracted because it shows that net income overstates actual cash received.",
+ oe:["An AR increase means you recognized revenue but haven't collected the cash yet — it overstates cash, so it's subtracted.",
+     "Correct! AR increasing means cash lagged behind revenue — subtract it from net income.",
+     "AR changes do affect operating cash flow — working capital changes are a key part of the indirect method.",
+     "AR is an operating item — it belongs in Operating Activities, not Investing."]},
+
+{d:'M',
+ q:"Return on Equity (ROE) is calculated as:",
+ o:["Net Income ÷ Total Assets","Operating Income ÷ Revenue","Net Income ÷ Shareholders' Equity","Revenue ÷ Total Equity"],
+ a:2,
+ e:"ROE = Net Income ÷ Shareholders' Equity. It measures how much profit is generated for every dollar of equity that shareholders have invested.",
+ oe:["Net Income ÷ Total Assets is Return on Assets (ROA) — it measures profit per dollar of total assets.",
+     "Operating Income ÷ Revenue is Operating Margin — a profitability ratio but not ROE.",
+     "Correct! ROE = Net Income ÷ Shareholders' Equity.",
+     "Revenue ÷ Total Equity is not a standard ratio — ROE uses Net Income, not Revenue."]},
+
+{d:'M',
+ q:"A company reports Revenue of $500,000, COGS of $300,000, and Operating Expenses of $100,000. Operating Income is:",
+ o:["$200,000","$100,000","$300,000","$400,000"],
+ a:1,
+ e:"Gross Profit = $500k − $300k = $200k. Operating Income = $200k − $100k = $100k.",
+ oe:["$200,000 is Gross Profit — before deducting operating expenses.",
+     "Correct! Operating Income = $500k − $300k − $100k = $100,000.",
+     "$300,000 is COGS — not operating income.",
+     "$400,000 subtracts only COGS from revenue — it forgets operating expenses."]},
+
+{d:'M',
+ q:"Accrued expenses on the Balance Sheet are best described as:",
+ o:["Expenses paid in advance of being incurred","Long-term obligations for future spending","Costs incurred but not yet paid in cash","Revenue received before it is earned"],
+ a:2,
+ e:"Accrued expenses (e.g., accrued wages, accrued interest) are costs the company has incurred during the period but hasn't yet paid in cash — they are current liabilities.",
+ oe:["Expenses paid in advance are Prepaid Expenses — an asset, not accrued expenses.",
+     "Accrued expenses are short-term current liabilities — not long-term obligations.",
+     "Correct! Accrued expenses are costs incurred but not yet paid — a current liability.",
+     "Revenue received before it is earned describes Deferred Revenue — a different liability."]},
+
+{d:'M',
+ q:"Which of the following best describes the matching principle?",
+ o:["Revenue must equal expenses every period","All expenses are recognized when cash is paid","Expenses are recognized in the same period as the revenue they help generate","Assets must match liabilities at period end"],
+ a:2,
+ e:"The matching principle requires that expenses be recorded in the same period as the revenues they help produce — ensuring accurate profit measurement for each period.",
+ oe:["Revenue does not need to equal expenses — companies can and do earn profits or suffer losses.",
+     "Recognizing expenses when cash is paid describes cash-basis accounting — not the accrual matching principle.",
+     "Correct! Expenses are matched to the period in which they help generate revenue.",
+     "The accounting equation (Assets = Liabilities + Equity) always balances — but that is a different concept from matching."]},
+
+{d:'M',
+ q:"A gain on the sale of equipment for more than its book value appears on the:",
+ o:["Balance Sheet as additional equity","Cash Flow Statement as an operating inflow","Income Statement as Other Income","Notes to financial statements only"],
+ a:2,
+ e:"A gain (sale price > book value) is recognized on the Income Statement as Other Income. The cash proceeds from the sale appear in Investing Activities on the Cash Flow Statement.",
+ oe:["Gains are recognized on the Income Statement — they flow into retained earnings, but are not recorded directly in equity.",
+     "On the Cash Flow Statement (indirect method), the gain is actually subtracted from operating activities and reclassified to Investing Activities where the cash inflow belongs.",
+     "Correct! The gain appears on the Income Statement as Other Income.",
+     "Gains are recognized on the Income Statement — not just disclosed in footnotes."]},
+
+{d:'M',
+ q:"The Debt-to-Equity ratio primarily measures:",
+ o:["How quickly the company collects receivables","The company's short-term liquidity","How much profit is earned per dollar of equity","The proportion of debt vs. equity used to finance the company"],
+ a:3,
+ e:"Debt-to-Equity = Total Debt ÷ Shareholders' Equity. It measures financial leverage — the relative mix of debt and equity used to fund the business.",
+ oe:["Receivables collection speed is measured by Days Sales Outstanding (DSO) — not D/E.",
+     "Short-term liquidity is measured by the Current Ratio or Quick Ratio — not D/E.",
+     "Profit per dollar of equity is Return on Equity (ROE) — not D/E.",
+     "Correct! Debt-to-Equity measures the proportion of debt vs. equity financing (leverage)."]},
+
+{d:'M',
+ q:"Which of the following would cause Net Income to be higher than Operating Cash Flow?",
+ o:["Depreciation expense is large","Accounts Receivable decreased during the period","Revenue was recognized but cash has not been collected","Cash collections exceeded recognized revenue"],
+ a:2,
+ e:"If revenue is recognized (boosting Net Income) but cash hasn't been collected (AR increases), Net Income exceeds Operating Cash Flow. This is the classic 'profitable but cash-poor' scenario.",
+ oe:["Large depreciation is a non-cash expense that is added back in OCF — it makes OCF higher than net income, not lower.",
+     "Decreasing AR means cash was collected faster than revenue was recognized — this would make OCF higher than net income.",
+     "Correct! Uncollected revenue inflates net income relative to actual operating cash flow.",
+     "Cash exceeding recognized revenue would make OCF higher than net income — the opposite situation."]},
+
+{d:'M',
+ q:"Which of the following is an example of an operating activity on the Cash Flow Statement?",
+ o:["Purchasing a new factory","Repaying a bank loan","Receiving cash from customers","Issuing bonds to investors"],
+ a:2,
+ e:"Receiving cash from customers is the primary operating inflow — it comes from delivering goods and services, which is the company's core business.",
+ oe:["Purchasing a factory is a capital expenditure — an Investing Activity.",
+     "Repaying a bank loan is paying down debt — a Financing Activity.",
+     "Correct! Cash collected from customers is an Operating Activity.",
+     "Issuing bonds raises debt capital — a Financing Activity."]},
+
+{d:'M',
+ q:"EBITDA is best described as:",
+ o:["Net income plus dividends paid","Total revenue minus COGS","A measure of operating profitability before financing costs and non-cash charges","Free cash flow after capital expenditures"],
+ a:2,
+ e:"EBITDA (Earnings Before Interest, Taxes, Depreciation, Amortization) strips out financing structure and non-cash charges to show the underlying operating cash profitability of the business.",
+ oe:["Net income plus dividends is not a standard metric and has no clear financial meaning.",
+     "Revenue minus COGS = Gross Profit — EBITDA starts from operating income and adds back non-cash charges.",
+     "Correct! EBITDA measures operating profitability before interest, taxes, and non-cash charges.",
+     "Free Cash Flow = Operating Cash Flow − CapEx — a different and more complete measure that uses actual cash numbers."]},
+
+{d:'M',
+ q:"A company has Current Assets of $300,000 and Current Liabilities of $200,000. Its Current Ratio is:",
+ o:["$100,000","0.67","2.0","1.5"],
+ a:3,
+ e:"Current Ratio = Current Assets ÷ Current Liabilities = $300,000 ÷ $200,000 = 1.5. A ratio of 1.5 means the company has $1.50 in current assets for every $1.00 of current liabilities.",
+ oe:["$100,000 is the dollar amount of Working Capital — the Current Ratio is a ratio, not a dollar figure.",
+     "0.67 = $200k ÷ $300k — that is the ratio inverted (liabilities divided by assets).",
+     "2.0 would result from $300k ÷ $150k — incorrect numbers were used.",
+     "Correct! Current Ratio = $300,000 ÷ $200,000 = 1.5."]},
+
+// ── HARD (34-49) ───────────────────────────────────────────────────────────
+{d:'H',
+ q:"Under the indirect method, an increase in Accounts Payable is treated as:",
+ o:["A cash outflow — you now owe more","A cash inflow — you conserved cash by delaying payment","No effect — payables are a liability, not cash","An investing activity adjustment"],
+ a:1,
+ e:"An AP increase means expenses were recognized but cash hasn't been paid yet — the company effectively conserved cash. Under the indirect method, this is added back as a source of operating cash.",
+ oe:["AP increasing means no cash has gone out yet — it is a cash conservation, not an outflow.",
+     "Correct! An AP increase means you delayed paying — a positive cash effect in Operating Activities.",
+     "AP changes do affect the Cash Flow Statement — working capital changes are a core part of the indirect method.",
+     "AP relates to operations (purchasing inventory and supplies) — it belongs in Operating Activities, not Investing."]},
+
+{d:'H',
+ q:"Which of the following best describes 'operating leverage'?",
+ o:["How much debt a company uses to finance operations","The proportion of fixed vs. variable costs in a company's cost structure","How quickly the company converts sales to cash","The ratio of operating income to total assets"],
+ a:1,
+ e:"Operating leverage refers to the cost structure mix. A company with high fixed costs has high operating leverage — small changes in revenue produce large swings in operating income.",
+ oe:["The use of debt describes financial leverage — a different concept.",
+     "Correct! Operating leverage reflects the proportion of fixed vs. variable costs.",
+     "Converting sales to cash is measured by DSO or the Cash Conversion Cycle — not operating leverage.",
+     "Operating income to total assets is Return on Assets — not operating leverage."]},
+
+{d:'H',
+ q:"A company uses accelerated depreciation for taxes but straight-line for financial reporting. This difference creates:",
+ o:["A permanent tax difference with no future reversal","Higher book income than taxable income in early years — creating a deferred tax liability","Lower book income than taxable income — creating a deferred tax asset","No difference — depreciation method does not affect taxes"],
+ a:1,
+ e:"Accelerated tax depreciation gives higher deductions now (lower taxable income) vs. straight-line book depreciation (higher book income). The company pays less tax now than its book income implies — creating a Deferred Tax Liability that reverses over time.",
+ oe:["This is a temporary (timing) difference — it reverses over the asset's life, so it is not permanent.",
+     "Correct! Faster tax depreciation → lower taxable income now → higher book income than taxable income → Deferred Tax Liability.",
+     "A Deferred Tax Asset arises when taxable income exceeds book income. Here the opposite is true — book income is higher than taxable income.",
+     "Depreciation timing differences between tax and book are one of the most common sources of deferred tax items."]},
+
+{d:'H',
+ q:"Which of the following is a warning sign of potential earnings manipulation?",
+ o:["Accounts Receivable growing in line with revenue","Steady gross margins over time","Accounts Receivable growing much faster than revenue","Declining Days Payable Outstanding"],
+ a:2,
+ e:"When AR grows faster than revenue, it suggests revenue may be recognized before cash is collected — possibly inflating current-period earnings. This 'AR runaway' is a classic earnings quality red flag.",
+ oe:["AR growing in line with revenue is expected and healthy — no red flag.",
+     "Stable gross margins are generally a positive sign — no red flag.",
+     "Correct! AR growing much faster than revenue suggests premature revenue recognition — a red flag.",
+     "Declining DPO means the company is paying suppliers faster — a neutral or positive sign, not a red flag."]},
+
+{d:'H',
+ q:"The concept of 'substance over form' in accounting means:",
+ o:["Financial statements must use a consistent format","Only large (material) transactions need to be disclosed","Transactions are recorded based on their economic reality, not their legal label","The Balance Sheet takes precedence over the Income Statement"],
+ a:2,
+ e:"Substance over form requires recording transactions based on their true economic nature. For example, a lease that transfers substantially all risks and rewards of ownership is treated as an asset purchase — regardless of what it is legally called.",
+ oe:["Consistent formatting relates to the comparability principle — not substance over form.",
+     "Materiality is a separate principle — substance over form applies to how transactions are classified, not whether they are disclosed.",
+     "Correct! Substance over form means economic reality governs accounting, not legal labels.",
+     "There is no hierarchy between financial statements — substance over form applies across all of them."]},
+
+{d:'H',
+ q:"Normalized EBITDA adjustments typically remove:",
+ o:["All depreciation and amortization charges","Revenue from non-core business segments","One-time, non-recurring items like restructuring charges","Standard operating expenses to show gross margin"],
+ a:2,
+ e:"Normalized EBITDA strips out non-recurring items (restructuring charges, one-time legal settlements, unusual gains/losses) to reveal the sustainable underlying earnings power of the business.",
+ oe:["D&A is always excluded from EBITDA by definition — that is not a 'normalization' adjustment, it is built into the formula.",
+     "Non-core revenue is rarely excluded from Normalized EBITDA — the focus is on removing non-recurring items.",
+     "Correct! Normalized EBITDA removes one-time, non-recurring items for a cleaner view of ongoing earnings.",
+     "Standard operating expenses are part of EBITDA — they are not removed in normalization."]},
+
+{d:'H',
+ q:"Which of the following describes 'window dressing' in financial reporting?",
+ o:["Using attractive charts and graphics in the annual report","Timing cash collections or payments just before period-end to make the Balance Sheet look stronger","Restating prior-period financial statements","Changing accounting methods midyear"],
+ a:1,
+ e:"Window dressing involves timing real transactions — like accelerating customer collections or delaying supplier payments — just before period-end to temporarily improve balance sheet metrics like cash and current ratio.",
+ oe:["Presentation aesthetics have nothing to do with window dressing in the accounting sense.",
+     "Correct! Window dressing times real transactions to improve period-end financial statement appearance.",
+     "Restating financials corrects prior errors — the opposite of window dressing.",
+     "Changing accounting methods requires disclosure and affects all periods — it is not window dressing."]},
+
+{d:'H',
+ q:"A company's Days Sales Outstanding (DSO) is 75 days vs. an industry average of 30 days. This most likely indicates:",
+ o:["The company collects cash faster than its peers","The company has a very aggressive credit policy that is working well","Potential collection problems or possible revenue recognition concerns","The company has unusually high revenue growth"],
+ a:2,
+ e:"DSO measures how long it takes to collect after a sale. A DSO of 75 vs. 30-day industry average means the company takes 2.5x longer to collect — suggesting collection problems, overly loose credit terms, or potentially inflated receivables.",
+ oe:["Lower DSO = faster collection. 75 days is HIGHER than 30 days — the company collects more slowly, not faster.",
+     "An aggressive credit policy might explain high DSO, but this is a problem, not something working well — slow collection ties up cash.",
+     "Correct! DSO much higher than peers signals collection problems or revenue quality concerns.",
+     "High revenue growth would not necessarily increase DSO unless AR is building up disproportionately."]},
+
+{d:'H',
+ q:"Which of the following describes 'earnings quality'?",
+ o:["Whether earnings per share exceeded analyst expectations","How high and consistent the dividend payout ratio is","How sustainable and cash-backed reported earnings are","The ratio of operating to non-operating income"],
+ a:2,
+ e:"Earnings quality refers to how well reported earnings reflect true, sustainable economic performance — particularly whether they are backed by real cash flows and free from manipulation.",
+ oe:["Beating analyst expectations says nothing about whether the underlying earnings are sustainable or real.",
+     "Dividend payout relates to capital allocation policy — not earnings quality.",
+     "Correct! High earnings quality means earnings are sustainable and backed by cash flows.",
+     "The operating vs. non-operating income split is one factor in quality assessment — but it doesn't fully define earnings quality."]},
+
+{d:'H',
+ q:"Under the percentage-of-completion method, revenue on a long-term contract is recognized:",
+ o:["All at once when the contract is fully delivered","Equally in each accounting period regardless of progress","When cash payments are received from the client","Proportionally based on work completed relative to total expected work"],
+ a:3,
+ e:"The percentage-of-completion method recognizes revenue as work is performed — typically measured by costs incurred to date relative to total estimated costs, or by milestones achieved.",
+ oe:["Recognizing revenue only at project delivery is the completed-contract method — not percentage-of-completion.",
+     "Straight-line recognition is only used when no better progress measure exists — it is not the standard percentage-of-completion approach.",
+     "Cash-basis recognition does not comply with accrual accounting principles for long-term contracts.",
+     "Correct! Revenue is recognized proportionally as work is completed."]},
+
+{d:'H',
+ q:"Which of the following would be classified as a variable cost?",
+ o:["Factory rent","Annual insurance premium","Executive salaries","Direct materials used in production"],
+ a:3,
+ e:"Variable costs change in direct proportion to production volume. Direct materials are consumed per unit produced — the more you make, the more materials you use.",
+ oe:["Factory rent is a fixed cost — it stays constant regardless of how much is produced.",
+     "Insurance premiums are typically fixed — they do not vary with production volume.",
+     "Executive salaries are fixed costs — they do not change with the level of production.",
+     "Correct! Direct materials are variable costs — they vary directly with production volume."]},
+
+{d:'H',
+ q:"A company has Net Income of $80,000 and adds back Depreciation of $20,000. Accounts Receivable increased by $15,000 and Accounts Payable increased by $10,000. Operating Cash Flow is:",
+ o:["$80,000","$95,000","$115,000","$70,000"],
+ a:1,
+ e:"OCF = Net Income + Depreciation − ΔAR + ΔAP = $80k + $20k − $15k + $10k = $95,000. AR increase reduces OCF (cash not yet collected); AP increase boosts OCF (cash not yet paid).",
+ oe:["$80,000 = Net Income alone — no working capital or depreciation adjustments made.",
+     "Correct! OCF = $80k + $20k − $15k + $10k = $95,000.",
+     "$115,000 adds all items without subtracting the AR increase.",
+     "$70,000 subtracts depreciation instead of adding it back — depreciation is a non-cash expense that is added back."]},
+
+{d:'H',
+ q:"Which of the following best describes conservatism (prudence) as an accounting principle?",
+ o:["Recognize gains early to maximize reported profitability","Always use the lowest possible values for all assets","Recognize probable losses when estimable; delay gains until realized","Expense all costs in the period purchased to be cautious"],
+ a:2,
+ e:"Conservatism means erring on the side of caution: anticipate losses as soon as they are probable and estimable, but don't recognize gains until they are actually realized. This avoids overstating financial position.",
+ oe:["Recognizing gains early would overstate profitability — the opposite of conservatism.",
+     "Using the lowest asset values indiscriminately is not conservatism — it's an oversimplification. Conservatism is about asymmetric treatment of gains vs. losses.",
+     "Correct! Conservatism = recognize probable losses early, delay gains until realized.",
+     "Expensing everything immediately is a cash-basis approach — not the accounting concept of conservatism."]},
+
+{d:'H',
+ q:"Which of the following is an example of a contingent liability that must be recorded on the Balance Sheet?",
+ o:["A possible lawsuit where the outcome is uncertain and amount cannot be estimated","A bond payable due in 5 years","A pending lawsuit where a loss is probable and the amount can be reasonably estimated","An operating lease commitment"],
+ a:2,
+ e:"A contingent liability must be accrued (recorded) when a loss is both probable AND the amount can be reasonably estimated. If only possible (not probable), it is disclosed in footnotes but not recorded.",
+ oe:["When the outcome is uncertain and not estimable, the contingency is disclosed in footnotes — not recorded on the Balance Sheet.",
+     "A bond payable is a definite, known liability — not contingent.",
+     "Correct! Probable + estimable = must be recorded as a liability on the Balance Sheet.",
+     "Operating lease commitments are disclosed separately — and under IFRS 16 / ASC 842, most are now recognized on the Balance Sheet anyway."]},
+
+{d:'H',
+ q:"In a contribution margin analysis, contribution margin equals:",
+ o:["Net Income + Fixed Costs","Revenue − All Costs","Revenue − Variable Costs","Gross Profit − Selling Expenses"],
+ a:2,
+ e:"Contribution Margin = Revenue − Variable Costs. It represents the amount each unit sold 'contributes' toward covering fixed costs — and then toward profit once fixed costs are covered.",
+ oe:["Net Income + Fixed Costs is one way to calculate Operating Income working backwards — not contribution margin.",
+     "Revenue − All Costs would give Net Income or Operating Income — not contribution margin, which only deducts variable costs.",
+     "Correct! Contribution Margin = Revenue − Variable Costs.",
+     "Gross Profit = Revenue − COGS — it uses total COGS (which may include both fixed and variable costs), not just variable costs."]},
+
+{d:'H',
+ q:"Break-even analysis determines the sales volume at which:",
+ o:["Net Income equals the prior year's net income","Variable costs equal fixed costs","Total Revenue equals Total Costs — resulting in zero profit","Gross Profit equals operating expenses"],
+ a:2,
+ e:"Break-even is the point where Total Revenue = Total Costs, so Net Income = $0. Any sales above break-even generate profit; below it generates a loss.",
+ oe:["Break-even compares current revenue to current costs — not to prior-year income.",
+     "Variable costs equaling fixed costs is not the break-even definition — break-even is where total revenue covers ALL costs.",
+     "Correct! Break-even is where Total Revenue = Total Costs and Net Income = $0.",
+     "Gross Profit equaling operating expenses is another way to describe operating break-even — but the cleaner definition is Total Revenue = Total Costs."]},
+];
+// ─── LEVEL DEFINITIONS ────────────────────────────────────────────────────
+// Each level: name, speed (px/frame), bg colors, checkpointQs (indices into QB),
+// and a layout function returning {segs, obs, mplats, totalLen}
+// 
+// Layout uses a coordinate system where y=0 is the floor surface.
+// Obstacles: {type:'s'=floorSpike, 'c'=ceilSpike, 'mp'=movingPlatform}
+// Segs: array of {x, w, type:'f'=floor|'g'=gap}
+// All x values in world pixels (absolute).
+//
+// Design rules verified for each level:
+//   - Max single gap: 115px (reachable with single jump at any speed)
+//   - Max spike run: leaves 40px clearance for landing
+//   - Ceiling spikes: always at least 120px vertical clearance from floor
+//   - Moving platforms: amplitude + base always within jumpable range
+
+const LEVEL_DEFS = [
+
+  // ── LEVEL 0: The Lobby ───────────────────────────────────────────────────
+  // Theme: Tutorial. Flat floor, one easy gap, two lone spikes.
+  // Teaches: jump timing over a gap, spike avoidance.
+  // 1 CP mid-way. Obstacles after CP so player must keep going.
+  {
+    name:"The Lobby", spd:2.2, bg:["#06091a","#0b1228"], cps:[0],
+    layout(W,H,FY){
+      const f=FY, BUF=300;
+      // Section A: flat run → gap → spike
+      const gA=W*.40, gW=80, a1=gA+gW;
+      const sp1=a1+90;
+      const cp1=sp1+120;        // CP after first spike
+      // Section B: BUF clear → double spike → gate
+      const sp2=cp1+BUF, sp3=cp1+BUF+100;
+      return {
+        segs:[{x:0,w:gA,type:'f'},{x:gA,w:gW,type:'g'},{x:a1,w:99999,type:'f'}],
+        obs:[
+          {type:'s',wx:sp1,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp2,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp3,wy:f-22,w:24,h:22},
+        ],
+        mplats:[{wx:gA-50,w:72,base:f-105,amp:28,freq:.9,phase:0}],
+        cpX:[cp1],
+      };
+    }
+  },
+
+  // ── LEVEL 1: Revenue Row ─────────────────────────────────────────────────
+  // Theme: Staircase feel. Two gaps, moving-platform crossing, spike pairs.
+  // Mario World 1-2 vibe: gaps require platform hops.
+  // 1 CP between the two gap zones.
+  {
+    name:"Revenue Row", spd:2.7, bg:["#050e10","#081810"], cps:[1],
+    layout(W,H,FY){
+      const f=FY, BUF=300;
+      // Section A: gap (moving-plat) → spike pair
+      const g1=W*.32, g1w=95, a1=g1+g1w;
+      const sp1=a1+70, sp2=a1+150;
+      const cp1=sp2+120;
+      // Section B: BUF → gap (moving-plat) → triple spike
+      const g2=cp1+BUF, g2w=100, a2=g2+g2w;
+      const sp3=a2+60, sp4=a2+140, sp5=a2+220;
+      return {
+        segs:[
+          {x:0,w:g1,type:'f'},{x:g1,w:g1w,type:'g'},
+          {x:a1,w:g2-a1,type:'f'},{x:g2,w:g2w,type:'g'},
+          {x:a2,w:99999,type:'f'},
+        ],
+        obs:[
+          {type:'s',wx:sp1,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp2,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp3,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp4,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp5,wy:f-22,w:24,h:22},
+        ],
+        mplats:[
+          {wx:g1-50,w:74,base:f-108,amp:32,freq:.9,phase:0},
+          {wx:g2-50,w:74,base:f-108,amp:32,freq:1.0,phase:1},
+        ],
+        cpX:[cp1],
+      };
+    }
+  },
+
+  // ── LEVEL 2: Asset Avenue ────────────────────────────────────────────────
+  // Theme: Alternating rhythm. Spike → gap → spike → gap pattern.
+  // GD "ship mode" inspiration: requires consistent jump timing.
+  // 1 CP at midpoint. Post-CP section mirrors pre-CP but tighter.
+  {
+    name:"Asset Avenue", spd:3.2, bg:["#0e051c","#180830"], cps:[2],
+    layout(W,H,FY){
+      const f=FY, BUF=300;
+      // Section A: spike–gap–spike–gap alternation
+      const sp1=W*.35, g1=sp1+80, g1w=85, a1=g1+g1w;
+      const sp2=a1+60, g2=sp2+80, g2w=85, a2=g2+g2w;
+      const sp3=a2+60;
+      const cp1=sp3+130;
+      // Section B: BUF → tighter alternation (60px gaps, closer spikes)
+      const sp4=cp1+BUF, g3=sp4+70, g3w=90, a3=g3+g3w;
+      const sp5=a3+50, g4=sp5+65, g4w=90, a4=g4+g4w;
+      const sp6=a4+50, sp7=a4+120;
+      return {
+        segs:[
+          {x:0,w:sp1,type:'f'},
+          {x:g1,w:g1w,type:'g'},{x:a1,w:g2-a1,type:'f'},
+          {x:g2,w:g2w,type:'g'},{x:a2,w:g3-a2,type:'f'},
+          {x:g3,w:g3w,type:'g'},{x:a3,w:g4-a3,type:'f'},
+          {x:g4,w:g4w,type:'g'},{x:a4,w:99999,type:'f'},
+        ],
+        obs:[
+          {type:'s',wx:sp1,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp2,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp3,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp4,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp5,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp6,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp7,wy:f-22,w:24,h:22},
+        ],
+        mplats:[
+          {wx:g1-50,w:72,base:f-100,amp:30,freq:1.0,phase:0},
+          {wx:g2-50,w:72,base:f-100,amp:30,freq:1.05,phase:.7},
+          {wx:g3-50,w:70,base:f-100,amp:32,freq:1.1,phase:1.4},
+          {wx:g4-50,w:70,base:f-100,amp:32,freq:1.15,phase:2.1},
+        ],
+        cpX:[cp1],
+      };
+    }
+  },
+
+  // ── LEVEL 3: Liability Lane ──────────────────────────────────────────────
+  // Theme: Wide gaps + spike walls. Mario World 4 cave feel.
+  // Wider gaps demand double-jump. Spike "walls" = two consecutive spikes.
+  // 1 CP after first gauntlet.
+  {
+    name:"Liability Lane", spd:3.7, bg:["#160507","#280b0b"], cps:[3],
+    layout(W,H,FY){
+      const f=FY, BUF=300;
+      // Section A: wide gap → spike wall → gap
+      const g1=W*.35, g1w=105, a1=g1+g1w;
+      const sw1=a1+60, sw2=a1+90;           // spike wall (pair close together)
+      const g2=sw2+100, g2w=95, a2=g2+g2w;
+      const sp1=a2+60;
+      const cp1=sp1+140;
+      // Section B: BUF → spike wall → wide gap → spike wall → spike
+      const sw3=cp1+BUF, sw4=cp1+BUF+36;
+      const g3=sw4+120, g3w=110, a3=g3+g3w;
+      const sw5=a3+55, sw6=a3+91, sp2=a3+160, sp3=a3+230;
+      return {
+        segs:[
+          {x:0,w:g1,type:'f'},{x:g1,w:g1w,type:'g'},
+          {x:a1,w:g2-a1,type:'f'},{x:g2,w:g2w,type:'g'},
+          {x:a2,w:g3-a2,type:'f'},{x:g3,w:g3w,type:'g'},
+          {x:a3,w:99999,type:'f'},
+        ],
+        obs:[
+          {type:'s',wx:sw1,wy:f-22,w:24,h:22},
+          {type:'s',wx:sw2,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp1,wy:f-22,w:24,h:22},
+          {type:'s',wx:sw3,wy:f-22,w:24,h:22},
+          {type:'s',wx:sw4,wy:f-22,w:24,h:22},
+          {type:'s',wx:sw5,wy:f-22,w:24,h:22},
+          {type:'s',wx:sw6,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp2,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp3,wy:f-22,w:24,h:22},
+        ],
+        mplats:[
+          {wx:g1-50,w:74,base:f-108,amp:35,freq:1.0,phase:0},
+          {wx:g2-50,w:74,base:f-108,amp:35,freq:1.05,phase:.8},
+          {wx:g3-50,w:72,base:f-105,amp:38,freq:1.1,phase:1.6},
+        ],
+        cpX:[cp1],
+      };
+    }
+  },
+
+  // ── LEVEL 4: Equity Estates ──────────────────────────────────────────────
+  // Theme: Ceiling spikes debut. GD "UFO mode" vibe: stay low OR stay high.
+  // Floor spikes push you UP, ceiling spikes push you DOWN.
+  // 1 CP. Post-CP section has ceiling-heavy pattern.
+  {
+    name:"Equity Estates", spd:4.1, bg:["#051414","#0a2020"], cps:[4],
+    layout(W,H,FY){
+      const f=FY, HH=46, BUF=300;
+      // Section A: alternating floor+ceiling
+      const sp1=W*.35, cs1=sp1+50, sp2=cs1+50, cs2=sp2+50, sp3=cs2+60;
+      const g1=sp3+90, g1w=95, a1=g1+g1w;
+      const sp4=a1+60;
+      const cp1=sp4+140;
+      // Section B: BUF → ceiling-dominant corridor → gap → floor-dominant
+      const cs3=cp1+BUF, cs4=cs3+45, cs5=cs4+45, cs6=cs5+45;
+      const g2=cs6+100, g2w=100, a2=g2+g2w;
+      const sp5=a2+50, cs7=a2+90, sp6=a2+140, cs8=a2+185, sp7=a2+235;
+      return {
+        segs:[
+          {x:0,w:g1,type:'f'},{x:g1,w:g1w,type:'g'},
+          {x:a1,w:g2-a1,type:'f'},{x:g2,w:g2w,type:'g'},
+          {x:a2,w:99999,type:'f'},
+        ],
+        obs:[
+          {type:'s',wx:sp1,wy:f-22,w:24,h:22},
+          {type:'c',wx:cs1,wy:HH,  w:22,h:20},
+          {type:'s',wx:sp2,wy:f-22,w:24,h:22},
+          {type:'c',wx:cs2,wy:HH,  w:22,h:20},
+          {type:'s',wx:sp3,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp4,wy:f-22,w:24,h:22},
+          // ceiling run
+          {type:'c',wx:cs3,wy:HH,w:22,h:20},
+          {type:'c',wx:cs4,wy:HH,w:22,h:20},
+          {type:'c',wx:cs5,wy:HH,w:22,h:20},
+          {type:'c',wx:cs6,wy:HH,w:22,h:20},
+          // post-gap alternating
+          {type:'s',wx:sp5,wy:f-22,w:24,h:22},
+          {type:'c',wx:cs7,wy:HH,  w:22,h:20},
+          {type:'s',wx:sp6,wy:f-22,w:24,h:22},
+          {type:'c',wx:cs8,wy:HH,  w:22,h:20},
+          {type:'s',wx:sp7,wy:f-22,w:24,h:22},
+        ],
+        mplats:[
+          {wx:g1-50,w:72,base:f-105,amp:30,freq:1.0,phase:0},
+          {wx:g2-50,w:72,base:f-105,amp:30,freq:1.1,phase:.9},
+        ],
+        cpX:[cp1],
+      };
+    }
+  },
+
+  // ── LEVEL 5: Cash Flow Canyon ────────────────────────────────────────────
+  // Theme: Canyon run. Sawmill + gaps. 2 CPs at ~33% and ~66%.
+  // SAFE START: first obstacle no earlier than W*0.35.
+  // EXTENDED: 3 full obstacle sections per CP zone, longer saws, more gaps.
+  {
+    name:"Cash Flow Canyon", spd:4.6, bg:["#160c04","#261604"], cps:[5,6],
+    layout(W,H,FY){
+      const f=FY, HH=46, BUF=300, SAFE=Math.floor(W*0.38);
+      function saw(x,n){
+        return Array.from({length:n},(_,i)=>
+          i%2===0 ? {type:'s',wx:x+i*36,wy:f-22,w:24,h:22}
+                  : {type:'c',wx:x+i*36,wy:HH,  w:22,h:20});
+      }
+      // ── Zone A (before CP1) ──────────────────────────────
+      // safe run → spike pair → saw(4) → gap → saw(3) → spike → gap → saw(4)
+      const sp1=SAFE, sp2=SAFE+90;
+      const saw1=sp2+80, n1=4, end1=saw1+n1*36;
+      const g1=end1+55, g1w=90, a1=g1+g1w;
+      const saw2=a1+40, n2=3, end2=saw2+n2*36;
+      const sp3=end2+60;
+      const g2=sp3+90, g2w=95, a2=g2+g2w;
+      const saw3=a2+40, n3=4, end3=saw3+n3*36;
+      const cp1=end3+130;
+      // ── Zone B (CP1 → CP2) ──────────────────────────────
+      // BUF → saw(6) → gap → spike wall → saw(5) → gap → saw(4) → spike pair
+      const saw4=cp1+BUF, n4=6, end4=saw4+n4*36;
+      const g3=end4+55, g3w=100, a3=g3+g3w;
+      const sw1=a3+55, sw2=sw1+36;
+      const saw5=sw2+80, n5=5, end5=saw5+n5*36;
+      const g4=end5+55, g4w=95, a4=g4+g4w;
+      const saw6=a4+40, n6=4, end6=saw6+n6*36;
+      const sp4=end6+80, sp5=end6+180;
+      const cp2=sp5+130;
+      // ── Zone C (after CP2) ──────────────────────────────
+      // BUF → saw(7) → gap → spike wall+ceil → saw(6) → gap → saw(5) → spike pair
+      const saw7=cp2+BUF, n7=7, end7=saw7+n7*36;
+      const g5=end7+55, g5w=100, a5=g5+g5w;
+      const sw3=a5+55, sw4=sw3+36;
+      const cs1=sw4+70, cs2=cs1+44;
+      const saw8=cs2+60, n8=6, end8=saw8+n8*36;
+      const g6=end8+55, g6w=100, a6=g6+g6w;
+      const saw9=a6+40, n9=5, end9=saw9+n9*36;
+      const sp6=end9+80, sp7=end9+180;
+      return {
+        segs:[
+          {x:0,w:g1,type:'f'},{x:g1,w:g1w,type:'g'},
+          {x:a1,w:g2-a1,type:'f'},{x:g2,w:g2w,type:'g'},
+          {x:a2,w:g3-a2,type:'f'},{x:g3,w:g3w,type:'g'},
+          {x:a3,w:g4-a3,type:'f'},{x:g4,w:g4w,type:'g'},
+          {x:a4,w:g5-a4,type:'f'},{x:g5,w:g5w,type:'g'},
+          {x:a5,w:g6-a5,type:'f'},{x:g6,w:g6w,type:'g'},
+          {x:a6,w:99999,type:'f'},
+        ],
+        obs:[
+          {type:'s',wx:sp1,wy:f-22,w:24,h:22},{type:'s',wx:sp2,wy:f-22,w:24,h:22},
+          ...saw(saw1,n1),...saw(saw2,n2),
+          {type:'s',wx:sp3,wy:f-22,w:24,h:22},
+          ...saw(saw3,n3),
+          ...saw(saw4,n4),
+          {type:'s',wx:sw1,wy:f-22,w:24,h:22},{type:'s',wx:sw2,wy:f-22,w:24,h:22},
+          ...saw(saw5,n5),...saw(saw6,n6),
+          {type:'s',wx:sp4,wy:f-22,w:24,h:22},{type:'s',wx:sp5,wy:f-22,w:24,h:22},
+          ...saw(saw7,n7),
+          {type:'s',wx:sw3,wy:f-22,w:24,h:22},{type:'s',wx:sw4,wy:f-22,w:24,h:22},
+          {type:'c',wx:cs1,wy:HH,w:22,h:20},{type:'c',wx:cs2,wy:HH,w:22,h:20},
+          ...saw(saw8,n8),...saw(saw9,n9),
+          {type:'s',wx:sp6,wy:f-22,w:24,h:22},{type:'s',wx:sp7,wy:f-22,w:24,h:22},
+        ],
+        mplats:[
+          {wx:g1-50,w:74,base:f-105,amp:30,freq:1.0,phase:0},
+          {wx:g2-50,w:74,base:f-105,amp:30,freq:1.1,phase:.5},
+          {wx:g3-50,w:72,base:f-100,amp:32,freq:1.15,phase:1.0},
+          {wx:g4-50,w:72,base:f-100,amp:32,freq:1.2,phase:1.5},
+          {wx:g5-50,w:70,base:f-100,amp:34,freq:1.2,phase:2.0},
+          {wx:g6-50,w:70,base:f-100,amp:34,freq:1.3,phase:2.5},
+        ],
+        cpX:[cp1,cp2],
+      };
+    }
+  },
+
+  // ── LEVEL 6: Balance Bridge ──────────────────────────────────────────────
+  // Theme: Platform gauntlet. 2 CPs. SAFE START: W*0.38.
+  // EXTENDED: 4 gap sections per zone, tighter gaps, more ceiling spikes.
+  {
+    name:"Balance Bridge", spd:5.1, bg:["#040d18","#06162a"], cps:[7,8],
+    layout(W,H,FY){
+      const f=FY, HH=46, BUF=300, SAFE=Math.floor(W*0.38);
+      function saw(x,n){
+        return Array.from({length:n},(_,i)=>
+          i%2===0 ? {type:'s',wx:x+i*36,wy:f-22,w:24,h:22}
+                  : {type:'c',wx:x+i*36,wy:HH,  w:22,h:20});
+      }
+      // ── Zone A ──────────────────────────────────────────
+      // safe → spike pair+ceil → gap → alt(4) → gap → saw(3) → gap → spike wall+ceil pair
+      const sp1=SAFE, cs1=SAFE+60, sp2=SAFE+110;
+      const g1=sp2+100, g1w=108, a1=g1+g1w;
+      const saw1=a1+40, n1=4, end1=saw1+n1*36;
+      const g2=end1+55, g2w=110, a2=g2+g2w;
+      const saw2=a2+40, n2=3, end2=saw2+n2*36;
+      const g3=end2+55, g3w=105, a3=g3+g3w;
+      const sw1=a3+55, sw2=sw1+36, cs2=a3+100, cs3=a3+148;
+      const cp1x=cs3+130; // CP1 placed 130px after last obstacle in Zone A
+      // ── Zone B ──────────────────────────────────────────
+      // BUF → ceiling run(5) → gap → saw(5) → gap → spike wall → gap → alt(5) → spike pair
+      const cs4=cp1x+BUF, cs5=cs4+44, cs6=cs5+44, cs7=cs6+44, cs8=cs7+44;
+      const g4=cs8+90, g4w=110, a4=g4+g4w;
+      const saw3=a4+40, n3=5, end3=saw3+n3*36;
+      const g5=end3+55, g5w=108, a5=g5+g5w;
+      const sw3=a5+55, sw4=sw3+36;
+      const g6=sw4+110, g6w=110, a6=g6+g6w;
+      const saw4=a6+40, n4=5, end4=saw4+n4*36;
+      const sp3=end4+80, sp4=end4+190;
+      const cp2=sp4+130;
+      // ── Zone C ──────────────────────────────────────────
+      // BUF → 4 consecutive platform gaps → saw(6) → gap → saw(5) → ceil rain(4) → spike pair
+      const g7=cp2+BUF, g7w=112, a7=g7+g7w;
+      const g8=a7+75, g8w=112, a8=g8+g8w;
+      const g9=a8+75, g9w=110, a9=g9+g9w;
+      const g10=a9+75, g10w=108, a10=g10+g10w;
+      const saw5=a10+40, n5=6, end5=saw5+n5*36;
+      const g11=end5+55, g11w=105, a11=g11+g11w;
+      const saw6=a11+40, n6=5, end6=saw6+n6*36;
+      const cs9=end6+60, cs10=cs9+44, cs11=cs10+44, cs12=cs11+44;
+      const sp5=cs12+80, sp6=cs12+190;
+      return {
+        segs:[
+          {x:0,w:g1,type:'f'},{x:g1,w:g1w,type:'g'},
+          {x:a1,w:g2-a1,type:'f'},{x:g2,w:g2w,type:'g'},
+          {x:a2,w:g3-a2,type:'f'},{x:g3,w:g3w,type:'g'},
+          {x:a3,w:g4-a3,type:'f'},{x:g4,w:g4w,type:'g'},
+          {x:a4,w:g5-a4,type:'f'},{x:g5,w:g5w,type:'g'},
+          {x:a5,w:g6-a5,type:'f'},{x:g6,w:g6w,type:'g'},
+          {x:a6,w:g7-a6,type:'f'},{x:g7,w:g7w,type:'g'},
+          {x:a7,w:g8-a7,type:'f'},{x:g8,w:g8w,type:'g'},
+          {x:a8,w:g9-a8,type:'f'},{x:g9,w:g9w,type:'g'},
+          {x:a9,w:g10-a9,type:'f'},{x:g10,w:g10w,type:'g'},
+          {x:a10,w:g11-a10,type:'f'},{x:g11,w:g11w,type:'g'},
+          {x:a11,w:99999,type:'f'},
+        ],
+        obs:[
+          {type:'s',wx:sp1,wy:f-22,w:24,h:22},{type:'c',wx:cs1,wy:HH,w:22,h:20},
+          {type:'s',wx:sp2,wy:f-22,w:24,h:22},
+          ...saw(saw1,n1),...saw(saw2,n2),
+          {type:'s',wx:sw1,wy:f-22,w:24,h:22},{type:'s',wx:sw2,wy:f-22,w:24,h:22},
+          {type:'c',wx:cs2,wy:HH,w:22,h:20},{type:'c',wx:cs3,wy:HH,w:22,h:20},
+          {type:'c',wx:cs4,wy:HH,w:22,h:20},{type:'c',wx:cs5,wy:HH,w:22,h:20},
+          {type:'c',wx:cs6,wy:HH,w:22,h:20},{type:'c',wx:cs7,wy:HH,w:22,h:20},
+          {type:'c',wx:cs8,wy:HH,w:22,h:20},
+          ...saw(saw3,n3),
+          {type:'s',wx:sw3,wy:f-22,w:24,h:22},{type:'s',wx:sw4,wy:f-22,w:24,h:22},
+          ...saw(saw4,n4),
+          {type:'s',wx:sp3,wy:f-22,w:24,h:22},{type:'s',wx:sp4,wy:f-22,w:24,h:22},
+          ...saw(saw5,n5),...saw(saw6,n6),
+          {type:'c',wx:cs9,wy:HH,w:22,h:20},{type:'c',wx:cs10,wy:HH,w:22,h:20},
+          {type:'c',wx:cs11,wy:HH,w:22,h:20},{type:'c',wx:cs12,wy:HH,w:22,h:20},
+          {type:'s',wx:sp5,wy:f-22,w:24,h:22},{type:'s',wx:sp6,wy:f-22,w:24,h:22},
+        ],
+        mplats:[
+          {wx:g1-50,w:72,base:f-105,amp:30,freq:1.0,phase:0},
+          {wx:g2-50,w:72,base:f-100,amp:32,freq:1.1,phase:.6},
+          {wx:g3-50,w:70,base:f-100,amp:32,freq:1.15,phase:1.2},
+          {wx:g4-50,w:70,base:f-105,amp:30,freq:1.2,phase:1.8},
+          {wx:g5-50,w:68,base:f-100,amp:34,freq:1.2,phase:2.4},
+          {wx:g6-50,w:68,base:f-100,amp:34,freq:1.3,phase:3.0},
+          {wx:g7-50,w:66,base:f-105,amp:32,freq:1.3,phase:0.3},
+          {wx:g8-50,w:66,base:f-100,amp:34,freq:1.35,phase:0.9},
+          {wx:g9-50,w:64,base:f-100,amp:36,freq:1.4,phase:1.5},
+          {wx:g10-50,w:64,base:f-105,amp:34,freq:1.45,phase:2.1},
+          {wx:g11-50,w:62,base:f-100,amp:36,freq:1.5,phase:2.7},
+        ],
+        cpX:[cp1x, cp2],
+      };
+    }
+  },
+
+  // ── LEVEL 7: Depreciation Dune ───────────────────────────────────────────
+  // Theme: Desert grind. 2 CPs. SAFE START W*0.38.
+  // EXTENDED: Much longer saws (10-12 teeth), more sections, double gaps.
+  {
+    name:"Depreciation Dune", spd:5.7, bg:["#100f03","#1c1b05"], cps:[9,10],
+    layout(W,H,FY){
+      const f=FY, HH=46, BUF=300, SAFE=Math.floor(W*0.38);
+      function saw(x,n){
+        return Array.from({length:n},(_,i)=>
+          i%2===0 ? {type:'s',wx:x+i*36,wy:f-22,w:24,h:22}
+                  : {type:'c',wx:x+i*36,wy:HH,  w:22,h:20});
+      }
+      // ── Zone A ──────────────────────────────────────────
+      // safe → spike → saw(5) → gap → saw(4) → gap → long saw(8) → gap → spike
+      const sp1=SAFE;
+      const saw1=sp1+80, n1=5, end1=saw1+n1*36;
+      const g1=end1+55, g1w=100, a1=g1+g1w;
+      const saw2=a1+40, n2=4, end2=saw2+n2*36;
+      const g2=end2+55, g2w=105, a2=g2+g2w;
+      const saw3=a2+40, n3=8, end3=saw3+n3*36;
+      const g3=end3+55, g3w=100, a3=g3+g3w;
+      const sp2=a3+60;
+      const cp1=sp2+130;
+      // ── Zone B ──────────────────────────────────────────
+      // BUF → very long saw(12) → gap → saw(6) → gap → saw(8) → gap → spike wall → saw(6)
+      const saw4=cp1+BUF, n4=12, end4=saw4+n4*36;
+      const g4=end4+55, g4w=105, a4=g4+g4w;
+      const saw5=a4+40, n5=6, end5=saw5+n5*36;
+      const g5=end5+55, g5w=108, a5=g5+g5w;
+      const saw6=a5+40, n6=8, end6=saw6+n6*36;
+      const g6=end6+55, g6w=105, a6=g6+g6w;
+      const sw1=a6+55, sw2=sw1+36;
+      const saw7=sw2+80, n7=6, end7=saw7+n7*36;
+      const sp3=end7+60;
+      const cp2=sp3+130;
+      // ── Zone C ──────────────────────────────────────────
+      // BUF → spike wall+ceil → long saw(10) → gap → saw(6) → double gap → saw(8) → spike pair
+      const sw3=cp2+BUF, sw4=sw3+36;
+      const cs1=sw4+70, cs2=cs1+44, cs3=cs2+44;
+      const saw8=cs3+60, n8=10, end8=saw8+n8*36;
+      const g7=end8+55, g7w=105, a7=g7+g7w;
+      const saw9=a7+40, n9=6, end9=saw9+n9*36;
+      const g8=end9+55, g8w=108, a8=g8+g8w;
+      const g9=a8+60, g9w=100, a9=g9+g9w;
+      const saw10=a9+40, n10=8, end10=saw10+n10*36;
+      const sp4=end10+80, sp5=end10+190;
+      return {
+        segs:[
+          {x:0,w:g1,type:'f'},{x:g1,w:g1w,type:'g'},
+          {x:a1,w:g2-a1,type:'f'},{x:g2,w:g2w,type:'g'},
+          {x:a2,w:g3-a2,type:'f'},{x:g3,w:g3w,type:'g'},
+          {x:a3,w:g4-a3,type:'f'},{x:g4,w:g4w,type:'g'},
+          {x:a4,w:g5-a4,type:'f'},{x:g5,w:g5w,type:'g'},
+          {x:a5,w:g6-a5,type:'f'},{x:g6,w:g6w,type:'g'},
+          {x:a6,w:g7-a6,type:'f'},{x:g7,w:g7w,type:'g'},
+          {x:a7,w:g8-a7,type:'f'},{x:g8,w:g8w,type:'g'},
+          {x:a8,w:g9-a8,type:'f'},{x:g9,w:g9w,type:'g'},
+          {x:a9,w:99999,type:'f'},
+        ],
+        obs:[
+          {type:'s',wx:sp1,wy:f-22,w:24,h:22},
+          ...saw(saw1,n1),...saw(saw2,n2),...saw(saw3,n3),
+          {type:'s',wx:sp2,wy:f-22,w:24,h:22},
+          ...saw(saw4,n4),...saw(saw5,n5),...saw(saw6,n6),
+          {type:'s',wx:sw1,wy:f-22,w:24,h:22},{type:'s',wx:sw2,wy:f-22,w:24,h:22},
+          ...saw(saw7,n7),{type:'s',wx:sp3,wy:f-22,w:24,h:22},
+          {type:'s',wx:sw3,wy:f-22,w:24,h:22},{type:'s',wx:sw4,wy:f-22,w:24,h:22},
+          {type:'c',wx:cs1,wy:HH,w:22,h:20},{type:'c',wx:cs2,wy:HH,w:22,h:20},
+          {type:'c',wx:cs3,wy:HH,w:22,h:20},
+          ...saw(saw8,n8),...saw(saw9,n9),...saw(saw10,n10),
+          {type:'s',wx:sp4,wy:f-22,w:24,h:22},{type:'s',wx:sp5,wy:f-22,w:24,h:22},
+        ],
+        mplats:[
+          {wx:g1-50,w:74,base:f-105,amp:32,freq:1.1,phase:0},
+          {wx:g2-50,w:72,base:f-100,amp:34,freq:1.2,phase:.5},
+          {wx:g3-50,w:72,base:f-100,amp:34,freq:1.2,phase:1.0},
+          {wx:g4-50,w:70,base:f-100,amp:36,freq:1.25,phase:1.5},
+          {wx:g5-50,w:70,base:f-100,amp:36,freq:1.3,phase:2.0},
+          {wx:g6-50,w:68,base:f-105,amp:34,freq:1.3,phase:2.5},
+          {wx:g7-50,w:68,base:f-100,amp:36,freq:1.35,phase:0.2},
+          {wx:g8-50,w:66,base:f-100,amp:38,freq:1.4,phase:0.8},
+          {wx:g9-50,w:66,base:f-100,amp:38,freq:1.45,phase:1.4},
+        ],
+        // Spike balls: slow oscillators on floor sections, player must time gap between spikes
+        sballs:[
+          {wx:saw5+n5*36*0.5, r:18, base:f-88, amp:68, freq:1.0, phase:0},
+          {wx:saw7+n7*36*0.5, r:18, base:f-88, amp:72, freq:1.1, phase:1.3},
+          {wx:saw9+n9*36*0.5, r:18, base:f-85, amp:70, freq:0.95, phase:2.6},
+        ],
+        cpX:[cp1,cp2],
+      };
+    }
+  },
+
+  // ── LEVEL 8: Ratio Ridge ─────────────────────────────────────────────────
+  // Theme: Precision. 4 CPs. SAFE START W*0.38.
+  // EXTENDED: 5 distinct zones, each much longer. Tighter sawmills (28px spacing).
+  {
+    name:"Ratio Ridge", spd:6.2, bg:["#040818","#080e32"], cps:[11,12,13,14],
+    layout(W,H,FY){
+      const f=FY, HH=46, BUF=300, SAFE=Math.floor(W*0.38);
+      function saw(x,n,gap){  // gap defaults to 36px
+        const g=gap||36;
+        return Array.from({length:n},(_,i)=>
+          i%2===0 ? {type:'s',wx:x+i*g,wy:f-22,w:24,h:22}
+                  : {type:'c',wx:x+i*g,wy:HH,  w:22,h:20});
+      }
+      // Zone A: safe → spike+ceil alternation → double gap → saw(6) → gap → spike wall → saw(4)
+      const sp1=SAFE, cs1=SAFE+70, sp2=SAFE+140, cs2=SAFE+210;
+      const g1=SAFE+300, g1w=105, a1=g1+g1w;
+      const g2=a1+60, g2w=100, a2=g2+g2w;
+      const saw1=a2+40, n1=6, end1=saw1+n1*36;
+      const g3=end1+55, g3w=105, a3=g3+g3w;
+      const sw1=a3+55, sw2=sw1+36;
+      const saw2=sw2+80, n2=4, end2=saw2+n2*36;
+      const sp3=end2+60;
+      const cp1=sp3+130;
+      // Zone B: BUF → ceiling rain(6) → gap → tight saw(8,28px) → gap → saw(6) → spike wall → gap
+      const cs3=cp1+BUF, cs4=cs3+44, cs5=cs4+44, cs6=cs5+44, cs7=cs6+44, cs8=cs7+44;
+      const g4=cs8+90, g4w=108, a4=g4+g4w;
+      const saw3=a4+40, n3=8, end3=saw3+n3*28;  // tighter 28px spacing
+      const g5=end3+55, g5w=108, a5=g5+g5w;
+      const saw4=a5+40, n4=6, end4=saw4+n4*36;
+      const sw3=end4+60, sw4=sw3+36;
+      const cs9=sw4+80, cs10=cs9+44, cs11=cs10+44;
+      const g6=cs11+90, g6w=105, a6=g6+g6w;
+      const sp4=a6+60, sp5=a6+140;
+      const cp2=sp5+130;
+      // Zone C: BUF → long saw(12) → gap → very tight saw(10,26px) → gap → saw(8) → gap → spike pair
+      const saw5=cp2+BUF, n5=12, end5=saw5+n5*36;
+      const g7=end5+55, g7w=110, a7=g7+g7w;
+      const saw6=a7+40, n6=10, end6=saw6+n6*26;  // very tight 26px
+      const g8=end6+55, g8w=108, a8=g8+g8w;
+      const saw7=a8+40, n7=8, end7=saw7+n7*36;
+      const g9=end7+55, g9w=105, a9=g9+g9w;
+      const sp6=a9+60, sp7=a9+140;
+      const cp3=sp7+130;
+      // Zone D: BUF → spike wall+ceil burst → saw(10) → gap → tight saw(8,28px) → gap → ceil rain(5) → saw(6)
+      const sw5=cp3+BUF, sw6=sw5+36;
+      const cs12=sw6+70, cs13=cs12+44, cs14=cs13+44, cs15=cs14+44;
+      const saw8=cs15+60, n8=10, end8=saw8+n8*36;
+      const g10=end8+55, g10w=110, a10=g10+g10w;
+      const saw9=a10+40, n9=8, end9=saw9+n9*28;
+      const g11=end9+55, g11w=108, a11=g11+g11w;
+      const cs16=a11+50, cs17=cs16+44, cs18=cs17+44, cs19=cs18+44, cs20=cs19+44;
+      const saw10=cs20+60, n10=6, end10=saw10+n10*36;
+      const sp8=end10+60, sp9=end10+140;
+      const cp4=sp9+130;
+      // Zone E: BUF → chaos (everything) → very long tight saw(14,26px) → gap → ceiling burst → spike wall → saw(8)
+      const saw11=cp4+BUF, n11=14, end11=saw11+n11*26;
+      const g12=end11+55, g12w=110, a12=g12+g12w;
+      const cs21=a12+50, cs22=cs21+44, cs23=cs22+44, cs24=cs23+44, cs25=cs24+44, cs26=cs25+44;
+      const sw7=cs26+80, sw8=sw7+36;
+      const saw12=sw8+80, n12=8, end12=saw12+n12*36;
+      const sp10=end12+60, sp11=end12+150;
+      return {
+        segs:[
+          {x:0,w:g1,type:'f'},{x:g1,w:g1w,type:'g'},
+          {x:a1,w:g2-a1,type:'f'},{x:g2,w:g2w,type:'g'},
+          {x:a2,w:g3-a2,type:'f'},{x:g3,w:g3w,type:'g'},
+          {x:a3,w:g4-a3,type:'f'},{x:g4,w:g4w,type:'g'},
+          {x:a4,w:g5-a4,type:'f'},{x:g5,w:g5w,type:'g'},
+          {x:a5,w:g6-a5,type:'f'},{x:g6,w:g6w,type:'g'},
+          {x:a6,w:g7-a6,type:'f'},{x:g7,w:g7w,type:'g'},
+          {x:a7,w:g8-a7,type:'f'},{x:g8,w:g8w,type:'g'},
+          {x:a8,w:g9-a8,type:'f'},{x:g9,w:g9w,type:'g'},
+          {x:a9,w:g10-a9,type:'f'},{x:g10,w:g10w,type:'g'},
+          {x:a10,w:g11-a10,type:'f'},{x:g11,w:g11w,type:'g'},
+          {x:a11,w:g12-a11,type:'f'},{x:g12,w:g12w,type:'g'},
+          {x:a12,w:99999,type:'f'},
+        ],
+        obs:[
+          {type:'s',wx:sp1,wy:f-22,w:24,h:22},{type:'c',wx:cs1,wy:HH,w:22,h:20},
+          {type:'s',wx:sp2,wy:f-22,w:24,h:22},{type:'c',wx:cs2,wy:HH,w:22,h:20},
+          ...saw(saw1,n1),...saw(saw2,n2),
+          {type:'s',wx:sw1,wy:f-22,w:24,h:22},{type:'s',wx:sw2,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp3,wy:f-22,w:24,h:22},
+          {type:'c',wx:cs3,wy:HH,w:22,h:20},{type:'c',wx:cs4,wy:HH,w:22,h:20},
+          {type:'c',wx:cs5,wy:HH,w:22,h:20},{type:'c',wx:cs6,wy:HH,w:22,h:20},
+          {type:'c',wx:cs7,wy:HH,w:22,h:20},{type:'c',wx:cs8,wy:HH,w:22,h:20},
+          ...saw(saw3,n3,28),...saw(saw4,n4),
+          {type:'s',wx:sw3,wy:f-22,w:24,h:22},{type:'s',wx:sw4,wy:f-22,w:24,h:22},
+          {type:'c',wx:cs9,wy:HH,w:22,h:20},{type:'c',wx:cs10,wy:HH,w:22,h:20},
+          {type:'c',wx:cs11,wy:HH,w:22,h:20},
+          {type:'s',wx:sp4,wy:f-22,w:24,h:22},{type:'s',wx:sp5,wy:f-22,w:24,h:22},
+          ...saw(saw5,n5),...saw(saw6,n6,26),...saw(saw7,n7),
+          {type:'s',wx:sp6,wy:f-22,w:24,h:22},{type:'s',wx:sp7,wy:f-22,w:24,h:22},
+          {type:'s',wx:sw5,wy:f-22,w:24,h:22},{type:'s',wx:sw6,wy:f-22,w:24,h:22},
+          {type:'c',wx:cs12,wy:HH,w:22,h:20},{type:'c',wx:cs13,wy:HH,w:22,h:20},
+          {type:'c',wx:cs14,wy:HH,w:22,h:20},{type:'c',wx:cs15,wy:HH,w:22,h:20},
+          ...saw(saw8,n8),...saw(saw9,n9,28),
+          {type:'c',wx:cs16,wy:HH,w:22,h:20},{type:'c',wx:cs17,wy:HH,w:22,h:20},
+          {type:'c',wx:cs18,wy:HH,w:22,h:20},{type:'c',wx:cs19,wy:HH,w:22,h:20},
+          {type:'c',wx:cs20,wy:HH,w:22,h:20},
+          ...saw(saw10,n10),
+          {type:'s',wx:sp8,wy:f-22,w:24,h:22},{type:'s',wx:sp9,wy:f-22,w:24,h:22},
+          ...saw(saw11,n11,26),
+          {type:'c',wx:cs21,wy:HH,w:22,h:20},{type:'c',wx:cs22,wy:HH,w:22,h:20},
+          {type:'c',wx:cs23,wy:HH,w:22,h:20},{type:'c',wx:cs24,wy:HH,w:22,h:20},
+          {type:'c',wx:cs25,wy:HH,w:22,h:20},{type:'c',wx:cs26,wy:HH,w:22,h:20},
+          {type:'s',wx:sw7,wy:f-22,w:24,h:22},{type:'s',wx:sw8,wy:f-22,w:24,h:22},
+          ...saw(saw12,n12),
+          {type:'s',wx:sp10,wy:f-22,w:24,h:22},{type:'s',wx:sp11,wy:f-22,w:24,h:22},
+        ],
+        mplats:[
+          {wx:g1-50,w:72,base:f-105,amp:28,freq:1.1,phase:0},
+          {wx:g2-50,w:70,base:f-100,amp:30,freq:1.2,phase:.5},
+          {wx:g3-50,w:70,base:f-100,amp:30,freq:1.2,phase:1.0},
+          {wx:g4-50,w:68,base:f-105,amp:28,freq:1.3,phase:1.5},
+          {wx:g5-50,w:68,base:f-100,amp:32,freq:1.2,phase:2.0},
+          {wx:g6-50,w:66,base:f-100,amp:32,freq:1.35,phase:2.5},
+          {wx:g7-50,w:66,base:f-100,amp:34,freq:1.3,phase:0.3},
+          {wx:g8-50,w:64,base:f-105,amp:32,freq:1.4,phase:0.8},
+          {wx:g9-50,w:64,base:f-100,amp:34,freq:1.35,phase:1.4},
+          {wx:g10-50,w:62,base:f-100,amp:36,freq:1.4,phase:2.0},
+          {wx:g11-50,w:62,base:f-100,amp:36,freq:1.45,phase:2.6},
+          {wx:g12-50,w:60,base:f-100,amp:38,freq:1.5,phase:3.2},
+        ],
+        // Spike balls: one per zone, placed mid-sawmill section
+        sballs:[
+          {wx:saw2+n2*36*0.5,  r:18, base:f-88, amp:70, freq:1.1, phase:0},
+          {wx:saw5+n5*36*0.5,  r:18, base:f-88, amp:74, freq:1.2, phase:0.8},
+          {wx:saw8+n8*36*0.5,  r:20, base:f-85, amp:76, freq:1.15,phase:1.6},
+          {wx:saw10+n10*36*0.5,r:18, base:f-88, amp:72, freq:1.3, phase:2.4},
+          {wx:saw12+n12*36*0.5,r:20, base:f-82, amp:78, freq:1.25,phase:3.2},
+        ],
+        cpX:[cp1,cp2,cp3,cp4],
+      };
+    }
+  },
+
+  // ── LEVEL 9: Statement Summit ────────────────────────────────────────────
+  // Theme: Everything. Max speed. 4 CPs. SAFE START W*0.38.
+  // EXTENDED: Massive level. Each zone is its own long gauntlet.
+  // Tightest saws (24px), most gaps, most ceiling density.
+  {
+    name:"Statement Summit", spd:7.0, bg:["#08040e","#140624"], cps:[15,16,17,18],
+    layout(W,H,FY){
+      const f=FY, HH=46, BUF=300, SAFE=Math.floor(W*0.38);
+      function saw(x,n,gap){
+        const g=gap||36;
+        return Array.from({length:n},(_,i)=>
+          i%2===0 ? {type:'s',wx:x+i*g,wy:f-22,w:24,h:22}
+                  : {type:'c',wx:x+i*g,wy:HH,  w:22,h:20});
+      }
+      // Zone A: safe → spike pair → saw(6) → gap → saw(5) → gap → ceiling burst(5) → saw(6,28px) → gap → spike wall
+      const sp1=SAFE, sp2=SAFE+100;
+      const saw1=sp2+80, n1=6, end1=saw1+n1*36;
+      const g1=end1+55, g1w=100, a1=g1+g1w;
+      const saw2=a1+40, n2=5, end2=saw2+n2*36;
+      const g2=end2+55, g2w=105, a2=g2+g2w;
+      const cs1=a2+50, cs2=cs1+44, cs3=cs2+44, cs4=cs3+44, cs5=cs4+44;
+      const saw3=cs5+60, n3=6, end3=saw3+n3*28;
+      const g3=end3+55, g3w=105, a3=g3+g3w;
+      const sw1=a3+55, sw2=sw1+36, sp3=a3+130;
+      const cp1=sp3+130;
+      // Zone B: BUF → long saw(12) → gap → ceiling rain(7) → spike → saw(8,28px) → gap → tight saw(10,24px) → gap → spike wall+ceil
+      const saw4=cp1+BUF, n4=12, end4=saw4+n4*36;
+      const g4=end4+55, g4w=108, a4=g4+g4w;
+      const cs6=a4+50,cs7=cs6+44,cs8=cs7+44,cs9=cs8+44,cs10=cs9+44,cs11=cs10+44,cs12=cs11+44;
+      const sp4=cs12+60;
+      const saw5=sp4+80, n5=8, end5=saw5+n5*28;
+      const g5=end5+55, g5w=108, a5=g5+g5w;
+      const saw6=a5+40, n6=10, end6=saw6+n6*24;
+      const g6=end6+55, g6w=110, a6=g6+g6w;
+      const sw3=a6+55, sw4=sw3+36;
+      const cs13=sw4+70, cs14=cs13+44, cs15=cs14+44;
+      const sp5=cs15+80, sp6=cs15+160;
+      const cp2=sp6+130;
+      // Zone C: BUF → very tight saw(14,24px) → gap → saw(10) → gap → ceiling burst(6) → saw(8,26px) → gap → triple spike wall
+      const saw7=cp2+BUF, n7=14, end7=saw7+n7*24;
+      const g7=end7+55, g7w=110, a7=g7+g7w;
+      const saw8=a7+40, n8=10, end8=saw8+n8*36;
+      const g8=end8+55, g8w=108, a8=g8+g8w;
+      const cs16=a8+50,cs17=cs16+44,cs18=cs17+44,cs19=cs18+44,cs20=cs19+44,cs21=cs20+44;
+      const saw9=cs21+60, n9=8, end9=saw9+n9*26;
+      const g9=end9+55, g9w=108, a9=g9+g9w;
+      const sw5=a9+55, sw6=sw5+36, sw7=sw6+36;  // triple spike wall
+      const cs22=sw7+70, cs23=cs22+44;
+      const sp7=cs23+80, sp8=cs23+160;
+      const cp3=sp8+130;
+      // Zone D: BUF → everything mixed → long tight saw(16,24px) → gap → ceiling burst(8) → saw(10,26px) → gap → spike wall+ceil × 2
+      const saw10=cp3+BUF, n10=16, end10=saw10+n10*24;
+      const g10=end10+55, g10w=110, a10=g10+g10w;
+      const cs24=a10+50,cs25=cs24+44,cs26=cs25+44,cs27=cs26+44,cs28=cs27+44,cs29=cs28+44,cs30=cs29+44,cs31=cs30+44;
+      const saw11=cs31+60, n11=10, end11=saw11+n11*26;
+      const g11=end11+55, g11w=110, a11=g11+g11w;
+      const sw8=a11+55, sw9=sw8+36;
+      const cs32=sw9+70, cs33=cs32+44, cs34=cs33+44;
+      const sw10=cs34+80, sw11=sw10+36;
+      const cs35=sw11+70, cs36=cs35+44, cs37=cs36+44;
+      const sp9=cs37+80, sp10=cs37+160;
+      const cp4=sp10+130;
+      // Zone E: BUF → absolute chaos gauntlet
+      const saw12=cp4+BUF, n12=18, end12=saw12+n12*24;
+      const g12=end12+55, g12w=112, a12=g12+g12w;
+      const cs38=a12+40,cs39=cs38+44,cs40=cs39+44,cs41=cs40+44,cs42=cs41+44,cs43=cs42+44,cs44=cs43+44,cs45=cs44+44,cs46=cs45+44;
+      const sw12=cs46+70, sw13=sw12+36, sw14=sw13+36;
+      const saw13=sw14+80, n13=12, end13=saw13+n13*26;
+      const g13=end13+55, g13w=110, a13=g13+g13w;
+      const saw14=a13+40, n14=10, end14=saw14+n14*24;
+      const sp11=end14+80, sp12=end14+190;
+      return {
+        segs:[
+          {x:0,w:g1,type:'f'},{x:g1,w:g1w,type:'g'},
+          {x:a1,w:g2-a1,type:'f'},{x:g2,w:g2w,type:'g'},
+          {x:a2,w:g3-a2,type:'f'},{x:g3,w:g3w,type:'g'},
+          {x:a3,w:g4-a3,type:'f'},{x:g4,w:g4w,type:'g'},
+          {x:a4,w:g5-a4,type:'f'},{x:g5,w:g5w,type:'g'},
+          {x:a5,w:g6-a5,type:'f'},{x:g6,w:g6w,type:'g'},
+          {x:a6,w:g7-a6,type:'f'},{x:g7,w:g7w,type:'g'},
+          {x:a7,w:g8-a7,type:'f'},{x:g8,w:g8w,type:'g'},
+          {x:a8,w:g9-a8,type:'f'},{x:g9,w:g9w,type:'g'},
+          {x:a9,w:g10-a9,type:'f'},{x:g10,w:g10w,type:'g'},
+          {x:a10,w:g11-a10,type:'f'},{x:g11,w:g11w,type:'g'},
+          {x:a11,w:g12-a11,type:'f'},{x:g12,w:g12w,type:'g'},
+          {x:a12,w:g13-a12,type:'f'},{x:g13,w:g13w,type:'g'},
+          {x:a13,w:99999,type:'f'},
+        ],
+        obs:[
+          {type:'s',wx:sp1,wy:f-22,w:24,h:22},{type:'s',wx:sp2,wy:f-22,w:24,h:22},
+          ...saw(saw1,n1),...saw(saw2,n2),
+          {type:'c',wx:cs1,wy:HH,w:22,h:20},{type:'c',wx:cs2,wy:HH,w:22,h:20},
+          {type:'c',wx:cs3,wy:HH,w:22,h:20},{type:'c',wx:cs4,wy:HH,w:22,h:20},
+          {type:'c',wx:cs5,wy:HH,w:22,h:20},
+          ...saw(saw3,n3,28),
+          {type:'s',wx:sw1,wy:f-22,w:24,h:22},{type:'s',wx:sw2,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp3,wy:f-22,w:24,h:22},
+          ...saw(saw4,n4),
+          {type:'c',wx:cs6,wy:HH,w:22,h:20},{type:'c',wx:cs7,wy:HH,w:22,h:20},
+          {type:'c',wx:cs8,wy:HH,w:22,h:20},{type:'c',wx:cs9,wy:HH,w:22,h:20},
+          {type:'c',wx:cs10,wy:HH,w:22,h:20},{type:'c',wx:cs11,wy:HH,w:22,h:20},
+          {type:'c',wx:cs12,wy:HH,w:22,h:20},
+          {type:'s',wx:sp4,wy:f-22,w:24,h:22},
+          ...saw(saw5,n5,28),...saw(saw6,n6,24),
+          {type:'s',wx:sw3,wy:f-22,w:24,h:22},{type:'s',wx:sw4,wy:f-22,w:24,h:22},
+          {type:'c',wx:cs13,wy:HH,w:22,h:20},{type:'c',wx:cs14,wy:HH,w:22,h:20},
+          {type:'c',wx:cs15,wy:HH,w:22,h:20},
+          {type:'s',wx:sp5,wy:f-22,w:24,h:22},{type:'s',wx:sp6,wy:f-22,w:24,h:22},
+          ...saw(saw7,n7,24),...saw(saw8,n8),
+          {type:'c',wx:cs16,wy:HH,w:22,h:20},{type:'c',wx:cs17,wy:HH,w:22,h:20},
+          {type:'c',wx:cs18,wy:HH,w:22,h:20},{type:'c',wx:cs19,wy:HH,w:22,h:20},
+          {type:'c',wx:cs20,wy:HH,w:22,h:20},{type:'c',wx:cs21,wy:HH,w:22,h:20},
+          ...saw(saw9,n9,26),
+          {type:'s',wx:sw5,wy:f-22,w:24,h:22},{type:'s',wx:sw6,wy:f-22,w:24,h:22},
+          {type:'s',wx:sw7,wy:f-22,w:24,h:22},
+          {type:'c',wx:cs22,wy:HH,w:22,h:20},{type:'c',wx:cs23,wy:HH,w:22,h:20},
+          {type:'s',wx:sp7,wy:f-22,w:24,h:22},{type:'s',wx:sp8,wy:f-22,w:24,h:22},
+          ...saw(saw10,n10,24),
+          {type:'c',wx:cs24,wy:HH,w:22,h:20},{type:'c',wx:cs25,wy:HH,w:22,h:20},
+          {type:'c',wx:cs26,wy:HH,w:22,h:20},{type:'c',wx:cs27,wy:HH,w:22,h:20},
+          {type:'c',wx:cs28,wy:HH,w:22,h:20},{type:'c',wx:cs29,wy:HH,w:22,h:20},
+          {type:'c',wx:cs30,wy:HH,w:22,h:20},{type:'c',wx:cs31,wy:HH,w:22,h:20},
+          ...saw(saw11,n11,26),
+          {type:'s',wx:sw8,wy:f-22,w:24,h:22},{type:'s',wx:sw9,wy:f-22,w:24,h:22},
+          {type:'c',wx:cs32,wy:HH,w:22,h:20},{type:'c',wx:cs33,wy:HH,w:22,h:20},
+          {type:'c',wx:cs34,wy:HH,w:22,h:20},
+          {type:'s',wx:sw10,wy:f-22,w:24,h:22},{type:'s',wx:sw11,wy:f-22,w:24,h:22},
+          {type:'c',wx:cs35,wy:HH,w:22,h:20},{type:'c',wx:cs36,wy:HH,w:22,h:20},
+          {type:'c',wx:cs37,wy:HH,w:22,h:20},
+          {type:'s',wx:sp9,wy:f-22,w:24,h:22},{type:'s',wx:sp10,wy:f-22,w:24,h:22},
+          ...saw(saw12,n12,24),
+          {type:'c',wx:cs38,wy:HH,w:22,h:20},{type:'c',wx:cs39,wy:HH,w:22,h:20},
+          {type:'c',wx:cs40,wy:HH,w:22,h:20},{type:'c',wx:cs41,wy:HH,w:22,h:20},
+          {type:'c',wx:cs42,wy:HH,w:22,h:20},{type:'c',wx:cs43,wy:HH,w:22,h:20},
+          {type:'c',wx:cs44,wy:HH,w:22,h:20},{type:'c',wx:cs45,wy:HH,w:22,h:20},
+          {type:'c',wx:cs46,wy:HH,w:22,h:20},
+          {type:'s',wx:sw12,wy:f-22,w:24,h:22},{type:'s',wx:sw13,wy:f-22,w:24,h:22},
+          {type:'s',wx:sw14,wy:f-22,w:24,h:22},
+          ...saw(saw13,n13,26),...saw(saw14,n14,24),
+          {type:'s',wx:sp11,wy:f-22,w:24,h:22},{type:'s',wx:sp12,wy:f-22,w:24,h:22},
+        ],
+        mplats:[
+          {wx:g1-50,w:72,base:f-105,amp:26,freq:1.2,phase:0},
+          {wx:g2-50,w:70,base:f-100,amp:28,freq:1.3,phase:.4},
+          {wx:g3-50,w:70,base:f-100,amp:28,freq:1.25,phase:.8},
+          {wx:g4-50,w:68,base:f-105,amp:26,freq:1.4,phase:1.2},
+          {wx:g5-50,w:68,base:f-100,amp:30,freq:1.3,phase:1.6},
+          {wx:g6-50,w:66,base:f-100,amp:32,freq:1.45,phase:2.0},
+          {wx:g7-50,w:66,base:f-100,amp:30,freq:1.3,phase:2.4},
+          {wx:g8-50,w:64,base:f-105,amp:28,freq:1.5,phase:2.8},
+          {wx:g9-50,w:64,base:f-100,amp:32,freq:1.4,phase:0.2},
+          {wx:g10-50,w:62,base:f-100,amp:34,freq:1.45,phase:0.7},
+          {wx:g11-50,w:62,base:f-105,amp:32,freq:1.5,phase:1.3},
+          {wx:g12-50,w:60,base:f-100,amp:36,freq:1.55,phase:1.9},
+          {wx:g13-50,w:60,base:f-100,amp:36,freq:1.6,phase:2.5},
+        ],
+        // Spike balls: aggressive oscillators throughout the level
+        sballs:[
+          {wx:saw3+n3*28*0.5,  r:20, base:f-85, amp:72, freq:1.2, phase:0},
+          {wx:saw6+n6*24*0.5,  r:20, base:f-85, amp:76, freq:1.3, phase:0.7},
+          {wx:saw9+n9*26*0.5,  r:20, base:f-82, amp:78, freq:1.25,phase:1.4},
+          {wx:saw11+n11*26*0.5,r:22, base:f-80, amp:80, freq:1.4, phase:2.1},
+          {wx:saw12+n12*24*0.5,r:20, base:f-85, amp:74, freq:1.35,phase:2.8},
+          {wx:saw13+n13*26*0.5,r:22, base:f-80, amp:82, freq:1.45,phase:3.5},
+          {wx:saw14+n14*24*0.5,r:22, base:f-78, amp:80, freq:1.5, phase:4.2},
+        ],
+        cpX:[cp1,cp2,cp3,cp4],
+      };
+    }
+  }
+];
+
+// ─── ENGINE STATE ─────────────────────────────────────────────────────────
+const canvas=document.getElementById('c');
+const ctx=canvas.getContext('2d');
+let W=canvas.width=innerWidth, H=canvas.height=innerHeight;
+const HH=46;
+
+let mode='start'; // start|playing|question|levelcomplete|gameover|win
+const BONUS_LEVELS=new Set([3,6,9]); // 0-indexed levels that have a bonus CP (last CP only)
+let lvl=0, lives=3, score=0;
+let lvlQs=[]; // shuffled question indices
+
+// Per-run question pools (shuffled once at game start, drawn from sequentially)
+// emPool = Easy+Medium indices (for first CP of each level)
+// mhPool = Medium+Hard indices (for later CPs)
+let emPool=[], mhPool=[];
+let emHead=0, mhHead=0;  // read heads
+
+let hardPool=[], hardHead=0; // for bonus questions — Hard only
+
+function buildPools(){
+  const em=QB.map((q,i)=>i).filter(i=>QB[i].d==='E'||QB[i].d==='M');
+  const mh=QB.map((q,i)=>i).filter(i=>QB[i].d==='M'||QB[i].d==='H');
+  const hard=QB.map((q,i)=>i).filter(i=>QB[i].d==='H');
+  emPool=shuffleArr([...em]);
+  mhPool=shuffleArr([...mh]);
+  hardPool=shuffleArr([...hard]);
+  emHead=0; mhHead=0; hardHead=0;
+}
+
+function drawFromPool(pool){
+  if(pool===emPool){const q=emPool[emHead%emPool.length];emHead++;return q;}
+  if(pool===mhPool){const q=mhPool[mhHead%mhPool.length];mhHead++;return q;}
+  if(pool===hardPool){const q=hardPool[hardHead%hardPool.length];hardHead++;return q;}
+}
+
+// Built level data
+let segs=[], obs=[], mplats=[], sballs=[], cpX=[], gateX=0, lvlLen=0, lvlSpd=2;
+
+// Checkpoint state
+let cpReached=[]; // bool array
+let cpQIdx=[];    // which QB question each checkpoint uses
+let activeCpIdx=-1; // which cp triggered the question
+let lastCpX=-1;    // world-x of checkpoint player just hit
+let lastCorrectCpX=-1; // world-x of last correctly answered checkpoint (respawn point)
+
+// Player
+const P={x:0,y:0,w:28,h:34,vy:0,jumps:2,alive:true,dTimer:0,inv:0};
+const GRAV=0.62, JF=-13.8, JF2=-11.5;
+
+let camX=0;
+let parts=[];
+
+function FY(){return Math.floor(H*.77);}
+
+// ─── BUILD LEVEL ─────────────────────────────────────────────────────────
+function buildLevel(li){
+  W=canvas.width=innerWidth; H=canvas.height=innerHeight;
+  const def=LEVEL_DEFS[li];
+  const layout=def.layout(W,H,FY());
+  segs=layout.segs;
+  obs=layout.obs;
+  mplats=layout.mplats.map(m=>({...m,wx:Math.max(10,m.wx)}));
+  sballs=(layout.sballs||[]);
+  cpX=layout.cpX;
+  lvlSpd=def.spd;
+  // Compute gateX as 250px after rightmost obstacle/checkpoint/mplat
+  const lastObsX=obs.length?Math.max(...obs.map(o=>o.wx+o.w)):0;
+  const lastCpWX=cpX.length?Math.max(...cpX):0;
+  const lastMpX=mplats.length?Math.max(...mplats.map(m=>m.wx+m.w)):0;
+  const lastThingX=Math.max(lastObsX,lastCpWX,lastMpX);
+  gateX=lastThingX+250;
+  // Extend totalLen so floor and level reach past the gate
+  const neededLen=gateX+W*0.75;
+  lvlLen=neededLen;
+  // Stretch the last floor segment to cover all the way to neededLen
+  for(let i=segs.length-1;i>=0;i--){
+    if(segs[i].type==='f'){segs[i].w=neededLen-segs[i].x;break;}
+  }
+
+  // Assign questions to checkpoints on first trigger (not here).
+  // cpQIdx[i] = -1 means "not yet assigned" — assigned on first CP touch.
+  cpReached=cpX.map(()=>false);
+  cpQIdx=cpX.map(()=>-1); // will be filled lazily on first hit
+
+  camX=0;
+  activeCpIdx=-1;
+  lastCpX=-1;
+  lastCorrectCpX=-1;
+
+  P.x=80; P.y=FY()-P.h;
+  P.vy=0; P.jumps=2; P.alive=true; P.dTimer=0; P.inv=45;
+  parts=[];
+}
+
+function resetToLastCheckpoint(){
+  // Respawn so player appears exactly on the checkpoint flag
+  // camX = cpWorldX - P.x  =>  player screen pos = P.x = 80, flag at same spot
+  if(lastCorrectCpX < 0){
+    camX=0; // no checkpoint reached yet — back to level start
+  } else {
+    camX=Math.max(0, lastCorrectCpX - P.x);
+  }
+  P.x=80; P.y=FY()-P.h;
+  P.vy=0; P.jumps=2; P.alive=true; P.dTimer=0; P.inv=45;
+  parts=[];
+}
+
+// ─── INPUT ───────────────────────────────────────────────────────────────
+let jQ=false;
+function doJump(){if(mode==='playing'&&P.alive&&P.jumps>0)jQ=true;}
+document.getElementById('tz').addEventListener('pointerdown',e=>{e.preventDefault();doJump();});
+window.addEventListener('keydown',e=>{
+  if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW'){e.preventDefault();doJump();}
+});
+
+// ─── PHYSICS ─────────────────────────────────────────────────────────────
+function inGap(wx){
+  for(const s of segs) if(s.type==='g'&&wx>s.x&&wx<s.x+s.w) return true;
+  return false;
+}
+
+function updatePhysics(){
+  const fy=FY();
+  if(!P.alive){
+    P.dTimer++;
+    if(P.dTimer>52){
+      flashFn('#ef4444','fr');
+      resetToLastCheckpoint();
+    }
+    return;
+  }
+  if(P.inv>0)P.inv--;
+
+  if(jQ&&P.jumps>0){
+    P.vy=P.jumps===2?JF:JF2;
+    P.jumps--;
+    emit(P.x+P.w/2,P.y+P.h,'rgba(240,192,64,.9)',5);
+  }
+  jQ=false;
+  P.vy=Math.min(P.vy+GRAV,18);
+  P.y+=P.vy;
+
+  // world-x center of player
+  const pwx=P.x+camX+P.w/2;
+
+  // Floor
+  if(P.y+P.h>=fy&&P.y+P.h<=fy+26&&P.vy>=0){
+    if(!inGap(pwx)){P.y=fy-P.h;P.vy=0;P.jumps=2;}
+  }
+
+  // Moving platforms
+  const t=Date.now()/1000;
+  for(const mp of mplats){
+    const mpy=mp.base+Math.sin(t*mp.freq+mp.phase)*mp.amp;
+    mp.wy=mpy;
+    const msx=mp.wx-camX;
+    if(P.x+P.w>msx&&P.x<msx+mp.w&&P.y+P.h>=mpy&&P.y+P.h<=mpy+14+12&&P.vy>=0){
+      P.y=mpy-P.h;P.vy=0;P.jumps=2;
+    }
+  }
+
+  if(P.y<HH){P.y=HH;P.vy=0;}
+  if(P.y>H+60){die();return;}
+
+  // Hazard collision
+  if(P.inv===0){
+    const px=P.x+camX;
+    for(const o of obs){
+      if(o.type==='s'){
+        if(px+P.w>o.wx+3&&px<o.wx+o.w-3&&P.y+P.h>o.wy+5&&P.y<o.wy+o.h){die();return;}
+      } else if(o.type==='c'){
+        if(px+P.w>o.wx+2&&px<o.wx+o.w-2&&P.y<o.wy+o.h&&P.y+6>o.wy){die();return;}
+      }
+    }
+  }
+
+  // Spike ball collision
+  if(P.inv===0){
+    for(const sb of sballs){
+      if(sb._cy===undefined)continue;
+      const scx=sb.wx-camX;
+      const dx=P.x+P.w/2-scx, dy=P.y+P.h/2-sb._cy;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<sb.r+8){die();return;} // slightly generous hitbox
+    }
+  }
+
+  // Checkpoint collision
+  for(let i=0;i<cpX.length;i++){
+    if(!cpReached[i]){
+      const csx=cpX[i]-camX;
+      if(P.x+P.w>csx-20&&P.x<csx+20){
+        cpReached[i]=true;
+        lastCpX=cpX[i];
+        activeCpIdx=i;
+        // Lazy question assignment: draw from shuffled pool on first hit,
+        // keep same question on retry (cpQIdx[i] already set).
+        if(cpQIdx[i]===-1){
+          const pool = i===0 ? emPool : mhPool;
+          cpQIdx[i] = drawFromPool(pool);
+        }
+        triggerQ(i, false);
+        return;
+      }
+    }
+  }
+
+  // Gate collision
+  const gsx=gateX-camX;
+  if(P.x+P.w>gsx&&P.x<gsx+50&&P.y+P.h>FY()-62&&P.y<FY()){
+    triggerGateClear();
+  }
+}
+
+function die(){
+  if(!P.alive)return;
+  P.alive=false;P.dTimer=0;
+  emit(P.x+P.w/2,P.y+P.h/2,'#ef4444',16);
+}
+
+// ─── PARTICLES ───────────────────────────────────────────────────────────
+function emit(x,y,c,n){
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2,s=1.5+Math.random()*4;
+    parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-2,l:1,c});
+  }
+}
+
+// ─── DRAWING ─────────────────────────────────────────────────────────────
+function drawBg(li){
+  const [t,b]=LEVEL_DEFS[li].bg;
+  const g=ctx.createLinearGradient(0,HH,0,H);
+  g.addColorStop(0,t);g.addColorStop(1,b);
+  ctx.fillStyle=g;ctx.fillRect(0,HH,W,H-HH);
+  ctx.fillStyle='rgba(180,210,255,.35)';
+  for(let i=0;i<22;i++){
+    const sx=Math.abs(Math.sin(i*137.5)*W)%W;
+    const sy=Math.abs(Math.cos(i*97.3)*(H*.44))+HH+8;
+    ctx.beginPath();ctx.arc(sx,sy,.7+((i*31)%3)*.4,0,Math.PI*2);ctx.fill();
+  }
+  // grid
+  ctx.strokeStyle='rgba(255,255,255,.02)';ctx.lineWidth=1;
+  const fy=FY();
+  for(let gx=((-camX)%64+64)%64;gx<W;gx+=64){
+    ctx.beginPath();ctx.moveTo(gx,HH);ctx.lineTo(gx,fy);ctx.stroke();
+  }
+}
+
+function drawFloor(){
+  const fy=FY();
+  for(const s of segs){
+    const sx=s.x-camX;
+    if(sx+s.w<-4||sx>W+4)continue;
+    if(s.type==='f'){
+      ctx.fillStyle='#1e293b';ctx.fillRect(sx,fy,s.w,24);
+      ctx.fillStyle='#334155';ctx.fillRect(sx,fy,s.w,3);
+      ctx.strokeStyle='rgba(255,255,255,.04)';ctx.lineWidth=1;
+      for(let tx=Math.floor(sx/32)*32;tx<sx+s.w;tx+=32){
+        ctx.beginPath();ctx.moveTo(tx,fy);ctx.lineTo(tx,fy+24);ctx.stroke();
+      }
+    } else {
+      ctx.fillStyle='rgba(0,0,0,.9)';ctx.fillRect(sx,fy,s.w,24);
+      ctx.fillStyle='rgba(239,68,68,.07)';ctx.fillRect(sx,fy-4,s.w,4);
+      ctx.strokeStyle='rgba(239,68,68,.15)';ctx.lineWidth=1;
+      ctx.setLineDash([4,10]);
+      ctx.beginPath();ctx.moveTo(sx,fy);ctx.lineTo(sx+s.w,fy);ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
+}
+
+function drawSpike(wx,wy,w,h,flip){
+  const sx=wx-camX;
+  if(sx+w<-4||sx>W+4)return;
+  const n=Math.max(1,Math.floor(w/11));
+  const tw=w/n;
+  ctx.fillStyle='#dc2626';
+  for(let i=0;i<n;i++){
+    const bx=sx+i*tw;
+    ctx.beginPath();
+    if(!flip){ctx.moveTo(bx,wy+h);ctx.lineTo(bx+tw/2,wy);ctx.lineTo(bx+tw,wy+h);}
+    else{ctx.moveTo(bx,wy);ctx.lineTo(bx+tw/2,wy+h);ctx.lineTo(bx+tw,wy);}
+    ctx.closePath();ctx.fill();
+  }
+  ctx.fillStyle='rgba(252,165,165,.35)';
+  for(let i=0;i<n;i++){
+    const bx=sx+i*tw;
+    ctx.beginPath();
+    if(!flip){ctx.moveTo(bx+tw*.3,wy+h);ctx.lineTo(bx+tw/2,wy+5);ctx.lineTo(bx+tw*.7,wy+h);}
+    else{ctx.moveTo(bx+tw*.3,wy);ctx.lineTo(bx+tw/2,wy+h-5);ctx.lineTo(bx+tw*.7,wy);}
+    ctx.closePath();ctx.fill();
+  }
+}
+
+function drawMplats(){
+  for(const mp of mplats){
+    const sx=mp.wx-camX;
+    if(sx+mp.w<-4||sx>W+4)continue;
+    const y=mp.wy||mp.base;
+    ctx.fillStyle='#4338ca';ctx.fillRect(sx,y,mp.w,14);
+    ctx.fillStyle='rgba(167,139,250,.55)';ctx.fillRect(sx,y,mp.w,3);
+    ctx.strokeStyle='rgba(167,139,250,.2)';ctx.lineWidth=1;
+    for(let i=0;i<mp.w;i+=14){
+      ctx.beginPath();ctx.moveTo(sx+i,y+14);ctx.lineTo(sx+i+7,y+2);ctx.lineTo(sx+i+14,y+14);ctx.stroke();
+    }
+  }
+}
+
+function drawSballs(){
+  const t=Date.now()/1000;
+  const fy=FY();
+  for(const sb of sballs){
+    const cx=sb.wx-camX;
+    if(cx+sb.r<-10||cx-sb.r>W+10)continue;
+    const cy=sb.base+Math.sin(t*sb.freq+sb.phase)*sb.amp;
+    sb._cy=cy; // cache for collision
+    const r=sb.r;
+    // Glow
+    ctx.fillStyle='rgba(239,68,68,0.15)';
+    ctx.beginPath();ctx.arc(cx,cy,r+8,0,Math.PI*2);ctx.fill();
+    // Body
+    ctx.fillStyle='#7f1d1d';
+    ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();
+    // Inner sheen
+    ctx.fillStyle='#dc2626';
+    ctx.beginPath();ctx.arc(cx,cy,r*0.65,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(252,165,165,0.4)';
+    ctx.beginPath();ctx.arc(cx-r*0.25,cy-r*0.25,r*0.28,0,Math.PI*2);ctx.fill();
+    // 8 spikes radiating outward
+    ctx.fillStyle='#dc2626';
+    for(let i=0;i<8;i++){
+      const angle=(i/8)*Math.PI*2+t*0.8; // slow rotation
+      const tx=cx+Math.cos(angle)*(r+10);
+      const ty=cy+Math.sin(angle)*(r+10);
+      const lx=cx+Math.cos(angle-0.35)*r;
+      const ly=cy+Math.sin(angle-0.35)*r;
+      const rx2=cx+Math.cos(angle+0.35)*r;
+      const ry2=cy+Math.sin(angle+0.35)*r;
+      ctx.beginPath();ctx.moveTo(tx,ty);ctx.lineTo(lx,ly);ctx.lineTo(rx2,ry2);ctx.closePath();ctx.fill();
+    }
+    // Warning: draw faint line showing travel path
+    ctx.strokeStyle='rgba(239,68,68,0.08)';ctx.lineWidth=1.5;ctx.setLineDash([4,6]);
+    ctx.beginPath();ctx.moveTo(cx,sb.base-sb.amp);ctx.lineTo(cx,sb.base+sb.amp);ctx.stroke();
+    ctx.setLineDash([]);
+  }
+}
+
+function drawCheckpoints(){
+  const isLastCPBonus=BONUS_LEVELS.has(lvl);
+  for(let i=0;i<cpX.length;i++){
+    const sx=cpX[i]-camX;
+    if(sx<-20||sx>W+20)continue;
+    const reached=cpReached[i];
+    const fy=FY();
+    const isBonus=isLastCPBonus && i===cpX.length-1;
+    // Flag pole
+    ctx.fillStyle=reached?'#4ade80':isBonus?'#a855f7':'#fbbf24';
+    ctx.fillRect(sx-2,fy-70,4,70);
+    if(isBonus && !reached){
+      // Purple shiny flag body
+      const pulse=Math.sin(Date.now()/350)*.2+.8;
+      // Outer glow
+      ctx.globalAlpha=0.25*pulse;
+      ctx.fillStyle='#c084fc';
+      ctx.beginPath();ctx.arc(sx+17,fy-59,22,0,Math.PI*2);ctx.fill();
+      ctx.globalAlpha=1;
+      // Main flag triangle
+      ctx.fillStyle='#7e22ce';
+      ctx.beginPath();
+      ctx.moveTo(sx+2,fy-70);
+      ctx.lineTo(sx+30,fy-58);
+      ctx.lineTo(sx+2,fy-46);
+      ctx.closePath();ctx.fill();
+      // Sheen highlight (top-left diagonal strip)
+      ctx.fillStyle='rgba(233,213,255,0.45)';
+      ctx.beginPath();
+      ctx.moveTo(sx+2,fy-70);
+      ctx.lineTo(sx+18,fy-63);
+      ctx.lineTo(sx+10,fy-55);
+      ctx.lineTo(sx+2,fy-58);
+      ctx.closePath();ctx.fill();
+      // Star icon
+      ctx.globalAlpha=pulse;
+      ctx.fillStyle='#e9d5ff';
+      ctx.font="bold 13px 'Space Mono',monospace";
+      ctx.textAlign='center';
+      ctx.fillText('★',sx+15,fy-56);
+      ctx.textAlign='left';
+      ctx.globalAlpha=1;
+      // Label above flag
+      ctx.globalAlpha=0.7+0.3*pulse;
+      ctx.fillStyle='#c084fc';
+      ctx.font="bold 9px 'Space Mono',monospace";
+      ctx.textAlign='center';
+      ctx.fillText('BONUS',sx+15,fy-78);
+      ctx.textAlign='left';
+      ctx.globalAlpha=1;
+    } else {
+      // Normal flag body
+      ctx.fillStyle=reached?'rgba(74,222,128,.5)':'rgba(251,191,36,.9)';
+      ctx.beginPath();
+      ctx.moveTo(sx+2,fy-70);
+      ctx.lineTo(sx+28,fy-58);
+      ctx.lineTo(sx+2,fy-46);
+      ctx.closePath();ctx.fill();
+      if(!reached){
+        const pulse=Math.sin(Date.now()/400)*.2+.8;
+        ctx.globalAlpha=pulse;
+        ctx.fillStyle='#fbbf24';
+        ctx.font="bold 11px 'Space Mono',monospace";
+        ctx.textAlign='center';
+        ctx.fillText('CP',sx+14,fy-78);
+        ctx.textAlign='left';
+        ctx.globalAlpha=1;
+      }
+    }
+  }
+}
+
+function drawGate(){
+  const sx=gateX-camX;
+  if(sx+50<-4||sx>W+4)return;
+  const fy=FY();
+  const pulse=Math.sin(Date.now()/380)*.25+.75;
+  ctx.fillStyle=`rgba(240,192,64,${.1*pulse})`;
+  ctx.fillRect(sx-14,fy-76,78,76);
+  ctx.fillStyle='#92400e';
+  ctx.fillRect(sx,fy-62,7,62);
+  ctx.fillRect(sx+43,fy-62,7,62);
+  ctx.fillStyle='#f0c040';ctx.fillRect(sx,fy-62,50,7);
+  ctx.fillStyle=`rgba(240,192,64,${.18*pulse})`;
+  ctx.fillRect(sx+7,fy-55,36,55);
+  ctx.fillStyle='#f0c040';
+  ctx.font="bold 26px 'Space Mono',monospace";
+  ctx.textAlign='center';
+  ctx.fillText('$',sx+25,fy-22);
+  ctx.textAlign='left';
+  const bp=Math.sin(Date.now()/300)*6;
+  ctx.fillStyle='rgba(240,192,64,.75)';
+  ctx.font='13px monospace';ctx.textAlign='center';
+  ctx.fillText('▶',sx+25+bp,fy-70);
+  ctx.textAlign='left';
+}
+
+function drawPlayer(){
+  if(!P.alive&&P.dTimer%4<2)return;
+  const a=P.inv>0?(Math.sin(P.inv*.9)*.35+.65):1;
+  ctx.globalAlpha=a;
+  ctx.fillStyle='#f0c040';
+  if(ctx.roundRect)ctx.roundRect(P.x,P.y,P.w,P.h,4);
+  else ctx.rect(P.x,P.y,P.w,P.h);
+  ctx.fill();
+  ctx.fillStyle='#0f172a';
+  ctx.fillRect(P.x+5,P.y+5,P.w-10,P.h-10);
+  ctx.fillStyle='#f0c040';
+  const cx=P.x+P.w/2,cy=P.y+P.h/2;
+  ctx.beginPath();
+  ctx.moveTo(cx,cy-6);ctx.lineTo(cx+6,cy);ctx.lineTo(cx,cy+6);ctx.lineTo(cx-6,cy);
+  ctx.closePath();ctx.fill();
+  ctx.globalAlpha=1;
+}
+
+function drawParticles(){
+  for(const p of parts){
+    ctx.globalAlpha=p.l;
+    ctx.fillStyle=p.c;
+    ctx.beginPath();ctx.arc(p.x,p.y,3*p.l,0,Math.PI*2);ctx.fill();
+  }
+  ctx.globalAlpha=1;
+}
+
+// ─── QUESTION SYSTEM ─────────────────────────────────────────────────────
+let curQ=null,qAns=false,qOk=false,qIsGate=false;
+let isBonusQ=false,bonusQIdx=-1; // bonus life question state
+
+// Shuffle helper
+function shuffleArr(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=0|Math.random()*(i+1);[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+// curShuffledIndices[i] = original option index that is now at display position i
+let curShuffledIndices=[];
+
+function triggerQ(cpIdx, isGate){
+  mode='question';
+  qIsGate=isGate;
+  isBonusQ=false; // reset bonus flag
+  document.getElementById('tz').classList.remove('on');
+  const qIdx=isGate? cpQIdx[cpX.length-1] : cpQIdx[cpIdx];
+  const q=QB[qIdx];
+  curQ=q;qAns=false;qOk=false;
+
+  // Shuffle option order
+  curShuffledIndices=shuffleArr([0,1,2,3]);
+
+  const qov=document.getElementById('qov');
+  qov.classList.remove('bonus-mode');
+  document.getElementById('qtype').className='cpbadge';
+  document.getElementById('qtype').textContent=isGate?'Level Gate':'Checkpoint';
+  document.getElementById('qbadge').textContent=isGate
+    ?`Level ${lvl+1} · Final Gate`
+    :`Level ${lvl+1} · Checkpoint ${cpIdx+1} of ${cpX.length}`;
+  document.getElementById('qtext').textContent=q.q;
+  document.getElementById('qexpl').classList.remove('show');
+  const qc=document.getElementById('qcont');
+  qc.classList.remove('show');qc.textContent='Continue →';
+  renderOpts(q);
+  HS('hud');SS('qov');
+}
+
+function triggerBonusQ(){
+  // Shown after a successful CP answer on a bonus level — Hard question only, no life penalty
+  isBonusQ=true;
+  bonusQIdx=drawFromPool(hardPool);
+  const q=QB[bonusQIdx];
+  curQ=q;qAns=false;qOk=false;
+  curShuffledIndices=shuffleArr([0,1,2,3]);
+
+  const qov=document.getElementById('qov');
+  qov.classList.add('bonus-mode');
+  const badge=document.getElementById('qtype');
+  badge.className='bonusbadge';
+  badge.textContent='★ BONUS — Earn an extra life!';
+  document.getElementById('qbadge').textContent='Hard question · No penalty for wrong answer';
+  document.getElementById('qtext').textContent=q.q;
+  document.getElementById('qexpl').classList.remove('show');
+  const qc=document.getElementById('qcont');
+  qc.classList.remove('show');qc.textContent='Continue →';
+  renderOpts(q);
+  SS('qov'); // already visible, just refresh content
+}
+
+function renderOpts(q){
+  const oc=document.getElementById('qopts');
+  oc.innerHTML='';
+  curShuffledIndices.forEach((origIdx,displayPos)=>{
+    const b=document.createElement('button');
+    b.className='qopt';
+    b.textContent=['A','B','C','D'][displayPos]+'. '+q.o[origIdx];
+    b.onclick=()=>ansQ(displayPos,b);
+    oc.appendChild(b);
+  });
+}
+
+function triggerGateClear(){
+  showLC();
+}
+
+function ansQ(displayPos,btn){
+  if(qAns)return;qAns=true;
+  const allBtns=document.querySelectorAll('.qopt');
+  allBtns.forEach(b=>b.classList.add('disabled'));
+  const origIdx=curShuffledIndices[displayPos];
+  const correctDisplayPos=curShuffledIndices.indexOf(curQ.a);
+
+  if(origIdx===curQ.a){
+    btn.classList.add('correct');
+    if(isBonusQ){
+      // Bonus correct → gain a life + 50 bonus pts
+      lives++;score+=50;
+      updateLives();
+      emit(P.x+P.w/2,P.y+P.h/2,'#fde047',14);
+      document.getElementById('qexpl').textContent='★ Extra life earned! '+curQ.e;
+      document.getElementById('qcont').textContent='Claim Life →';
+    } else {
+      qOk=true;score+=100;
+      emit(P.x+P.w/2,P.y+P.h/2,'#4ade80',10);
+      document.getElementById('qexpl').textContent=curQ.e;
+    }
+  } else {
+    btn.classList.add('wrong');
+    allBtns[correctDisplayPos].classList.add('correct');
+    if(isBonusQ){
+      // Bonus wrong → no penalty, just show explanation
+      document.getElementById('qexpl').textContent=
+        (curQ.oe?curQ.oe[origIdx]:curQ.e)+' \n\nCorrect answer: '+curQ.e;
+      document.getElementById('qcont').textContent='Continue →';
+    } else {
+      lives--;updateLives();
+      document.getElementById('qcont').textContent=lives<=0?'See Result':'Try Again';
+      const wrongExpl=curQ.oe?curQ.oe[origIdx]:curQ.e;
+      document.getElementById('qexpl').textContent=wrongExpl+' \n\nCorrect answer: '+curQ.e;
+    }
+  }
+  document.getElementById('qexpl').classList.add('show');
+  document.getElementById('qcont').classList.add('show');
+}
+
+function afterQ(){
+  // If this was a bonus question, just resume playing — no CP logic
+  if(isBonusQ){
+    isBonusQ=false;
+    HS('qov');
+    document.getElementById('qov').classList.remove('bonus-mode');
+    mode='playing';
+    SS('hud');
+    document.getElementById('tz').classList.add('on');
+    flashFn(qOk?'#f0c040':'#374151','fr');
+    return;
+  }
+
+  HS('qov');
+  if(qOk){
+    // Correct CP answer — mark respawn point
+    lastCorrectCpX=lastCpX;
+    // Check if this is a bonus CP (last CP on levels 3, 6, 9)
+    const isLastCP = activeCpIdx === cpX.length - 1;
+    const isBonusLevel = BONUS_LEVELS.has(lvl);
+    if(isLastCP && isBonusLevel){
+      // Show bonus question — don't resume yet
+      triggerBonusQ();
+      return;
+    }
+    mode='playing';
+    SS('hud');
+    document.getElementById('tz').classList.add('on');
+    flashFn('#4ade80','fg');
+  } else if(lives<=0){
+    showGO();
+  } else {
+    flashFn('#ef4444','fr');
+    if(activeCpIdx>=0) cpReached[activeCpIdx]=false;
+    resetToLastCheckpoint();
+    mode='playing';
+    SS('hud');
+    document.getElementById('tz').classList.add('on');
+  }
+}
+
+// ─── SCREENS ─────────────────────────────────────────────────────────────
+function updateLives(){
+  // Support >3 lives with extra gold hearts
+  let display='';
+  const base=3;
+  for(let i=0;i<Math.max(base,lives);i++){
+    if(i<lives) display+=(i<base?'♥':'★')+' ';
+    else display+='♡ ';
+  }
+  document.getElementById('hv').textContent=display.trim();
+  document.getElementById('hv').style.color=lives===1?'#ef4444':lives>3?'#fde047':'#f87171';
+}
+function showLC(){
+  mode='levelcomplete';
+  document.getElementById('lcn').textContent=LEVEL_DEFS[lvl].name+' cleared!';
+  document.getElementById('lcs').textContent='Score: '+score+' pts';
+  document.getElementById('lpf').style.width=((lvl+1)/10*100)+'%';
+  HS('hud');document.getElementById('tz').classList.remove('on');
+  SS('lc');
+}
+function nextLevel(){
+  HS('lc');lvl++;
+  if(lvl>=10){showWin();return;}
+  buildLevel(lvl);mode='playing';
+  document.getElementById('hl').textContent=`Level ${lvl+1}: ${LEVEL_DEFS[lvl].name}`;
+  document.getElementById('hs').textContent=score+' pts';
+  SS('hud');document.getElementById('tz').classList.add('on');
+}
+function showGO(){mode='gameover';HS('hud');document.getElementById('tz').classList.remove('on');SS('go');}
+function showWin(){mode='win';HS('hud');document.getElementById('tz').classList.remove('on');document.getElementById('wsc').textContent=score+' pts';SS('gw');}
+function flashFn(color,anim){
+  const f=document.getElementById('flash');
+  f.style.background=color;f.style.animation='none';
+  void f.offsetHeight;f.style.animation=anim+' .4s ease-out forwards';
+}
+function shuffleQs(){
+  const idx=Array.from({length:QB.length},(_,i)=>i);
+  for(let i=idx.length-1;i>0;i--){const j=0|Math.random()*(i+1);[idx[i],idx[j]]=[idx[j],idx[i]];}
+  lvlQs=idx;
+}
+function startGame(){
+  HS('ss');lives=3;score=0;lvl=0;
+  shuffleQs();buildPools();buildLevel(0);mode='playing';
+  document.getElementById('hl').textContent=`Level 1: ${LEVEL_DEFS[0].name}`;
+  updateLives();document.getElementById('hs').textContent='0 pts';
+  SS('hud');document.getElementById('tz').classList.add('on');
+}
+function restartGame(){HS('go');HS('gw');startGame();}
+
+// ─── MAIN LOOP ────────────────────────────────────────────────────────────
+let lastT=0;
+function loop(ts){
+  requestAnimationFrame(loop);
+  const dt=Math.min((ts-lastT)/16.67,3);lastT=ts;
+  ctx.clearRect(0,0,W,H);
+
+  if(mode==='playing'){
+    // Scroll camera — stop far past gate. Pause scrolling while player is dead
+    // so respawn position matches the checkpoint they came from.
+    const targetCam=gateX+W*1.5;
+    if(P.alive) camX=Math.min(camX+lvlSpd*dt, targetCam);
+
+    // Update mplat positions
+    const t=Date.now()/1000;
+    for(const mp of mplats) mp.wy=mp.base+Math.sin(t*mp.freq+mp.phase)*mp.amp;
+    for(const sb of sballs) sb._cy=sb.base+Math.sin(t*sb.freq+sb.phase)*sb.amp;
+
+    drawBg(lvl);
+    drawFloor();
+    drawMplats();
+    drawSballs();
+    for(const o of obs){
+      if(o.type==='s') drawSpike(o.wx,o.wy,o.w,o.h,false);
+      else if(o.type==='c') drawSpike(o.wx,o.wy,o.w,o.h,true);
+    }
+    drawCheckpoints();
+    drawGate();
+    drawPlayer();
+    drawParticles();
+
+    updatePhysics();
+
+    parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.12;p.l-=.033;});
+    parts=parts.filter(p=>p.l>0);
+
+    document.getElementById('hs').textContent=score+' pts';
+
+    // Progress bar — measures how far camera has scrolled toward the gate
+    // Full bar = gate is centered on screen (player is at it)
+    const prog=Math.min(1,(P.x+camX)/Math.max(1,gateX));
+    ctx.fillStyle='rgba(240,192,64,.1)';ctx.fillRect(0,HH,W*prog,3);
+    ctx.fillStyle='#f0c040';ctx.fillRect(Math.max(0,W*prog-2),HH,2,3);
+
+  } else {
+    drawBg(Math.min(lvl,9));
+  }
+}
+
+window.addEventListener('resize',()=>{
+  W=canvas.width=innerWidth;H=canvas.height=innerHeight;
+  if(mode==='playing')buildLevel(lvl);
+});
+
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
