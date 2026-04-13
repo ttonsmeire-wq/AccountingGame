@@ -1,0 +1,2725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>FinStatement Quest</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#08080f;font-family:'Space Mono',monospace;overflow:hidden;color:#fff;touch-action:none;user-select:none;-webkit-user-select:none;}
+canvas{display:block;position:absolute;top:0;left:0;z-index:1;}
+.screen{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;pointer-events:all;z-index:10;}
+.screen.hidden{display:none!important;}
+#ss{background:linear-gradient(160deg,#08080f 0%,#0c1220 60%,#08080f 100%);}
+.gt{font-family:'Syne',sans-serif;font-size:clamp(2rem,6vw,4rem);font-weight:800;color:#f0c040;letter-spacing:-2px;line-height:1;text-align:center;text-shadow:0 0 60px rgba(240,192,64,.3);}
+.gs{font-size:clamp(.6rem,1.6vw,.8rem);color:#7dd3fc;letter-spacing:.2em;text-transform:uppercase;margin:8px 0 18px;text-align:center;}
+.card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:16px 20px;margin:10px 0;max-width:480px;width:100%;text-align:left;}
+.card h3{color:#f0c040;font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;margin-bottom:9px;}
+.card li{color:#94a3b8;font-size:.78rem;margin:5px 0;list-style:none;padding-left:14px;position:relative;line-height:1.5;}
+.card li::before{content:'›';position:absolute;left:0;color:#4ade80;}
+.btn{display:inline-block;padding:11px 30px;background:#f0c040;color:#08080f;border:none;border-radius:5px;font-size:.82rem;font-weight:700;font-family:'Space Mono',monospace;cursor:pointer;margin:5px;transition:transform .1s,box-shadow .15s;letter-spacing:.03em;}
+.btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(240,192,64,.3);}
+.btn:active{transform:scale(.97);}
+.btn.out{background:transparent;color:#7dd3fc;border:1.5px solid rgba(125,211,252,.3);}
+.btn.out:hover{background:rgba(125,211,252,.07);box-shadow:none;}
+.hint{font-size:.7rem;color:#475569;margin-top:10px;text-align:center;letter-spacing:.05em;}
+#hud{position:absolute;top:0;left:0;width:100%;height:46px;padding:0 16px;display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,.7);border-bottom:1px solid rgba(255,255,255,.05);pointer-events:none;z-index:15;}
+#hud.hidden{display:none;}
+.hl{font-family:'Syne',sans-serif;font-size:.78rem;font-weight:700;color:#f0c040;max-width:40%;}
+.hv{color:#f87171;font-size:.82rem;letter-spacing:3px;}
+.hs{color:#4ade80;font-size:.78rem;}
+#flash{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;opacity:0;z-index:12;}
+@keyframes fr{0%{opacity:.6}100%{opacity:0}}
+@keyframes fg{0%{opacity:.4}100%{opacity:0}}
+#tz{position:absolute;top:46px;left:0;width:100%;height:calc(100% - 46px);cursor:pointer;display:none;z-index:9;}
+#tz.on{display:block;}
+.taphint{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);font-size:.66rem;color:rgba(255,255,255,.18);letter-spacing:.1em;text-transform:uppercase;pointer-events:none;animation:ph 2s ease-in-out infinite;}
+@keyframes ph{0%,100%{opacity:.18}50%{opacity:.5}}
+#qov{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(2,4,14,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;pointer-events:all;z-index:20;}
+#qov.hidden{display:none;pointer-events:none;}
+.qbox{max-width:540px;width:100%;}
+.qbadge{font-size:.66rem;text-transform:uppercase;letter-spacing:.12em;color:#7dd3fc;margin-bottom:9px;}
+.qtext{font-family:'Syne',sans-serif;font-size:clamp(.9rem,2.4vw,1.15rem);color:#f1f5f9;line-height:1.45;margin-bottom:18px;font-weight:700;}
+.qopts{display:flex;flex-direction:column;gap:8px;}
+.qopt{background:#0b1220;border:1.5px solid #1a2535;border-radius:7px;padding:11px 14px;cursor:pointer;color:#4a5568;font-size:.81rem;font-family:'Space Mono',monospace;transition:all .12s;text-align:left;width:100%;}
+.qopt:hover{border-color:#7dd3fc;background:#0a1c30;color:#e2e8f0;}
+.qopt.correct{border-color:#4ade80!important;background:#011508!important;color:#4ade80!important;}
+.qopt.wrong{border-color:#f87171!important;background:#1a0505!important;color:#f87171!important;}
+.qopt.disabled{pointer-events:none;}
+.qexpl{margin-top:12px;background:#0b1220;border-left:3px solid #7dd3fc;border-radius:0 6px 6px 0;padding:11px 14px;color:#334155;font-size:.78rem;line-height:1.6;display:none;white-space:pre-line;}
+.qexpl.show{display:block;}
+#qcont{margin-top:12px;display:none;}
+#qcont.show{display:inline-block;}
+#lc{background:rgba(2,4,14,.97);}
+.lcicon{font-size:2.8rem;margin-bottom:4px;}
+.pbar{width:100%;max-width:340px;height:5px;background:#0b1220;border-radius:3px;margin:12px 0;overflow:hidden;}
+.pfill{height:100%;background:linear-gradient(90deg,#7dd3fc,#4ade80);border-radius:3px;transition:width .5s ease;}
+#go,#gw{background:rgba(2,2,10,.98);}
+#pause-screen{background:rgba(2,4,14,.96);}
+/* checkpoint badge */
+.cpbadge{background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);border-radius:20px;padding:4px 14px;font-size:.72rem;color:#fbbf24;margin-bottom:10px;display:inline-block;}
+/* bonus question styling */
+.bonusbadge{background:rgba(250,204,21,.2);border:1.5px solid rgba(250,204,21,.6);border-radius:20px;padding:4px 14px;font-size:.72rem;color:#fde047;margin-bottom:10px;display:inline-block;letter-spacing:.06em;}
+#qov.bonus-mode{background:rgba(20,14,2,.97);}
+#qov.bonus-mode .qbox{border:1.5px solid rgba(250,204,21,.25);border-radius:12px;padding:20px;}
+#qov.bonus-mode .qtext{color:#fef9c3;}
+#qov.bonus-mode #qcont{background:#ca8a04;color:#fff;}
+#qov.bonus-mode #qcont:hover{background:#a16207;}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="flash"></div>
+<div id="hud" class="hidden">
+  <span class="hl" id="hl">Level 1</span>
+  <span class="hv" id="hv">♥ ♥ ♥</span>
+  <span class="hs" id="hs">0 pts</span>
+</div>
+<div id="tz">
+  <div class="taphint">Tap · Space · ↑ to jump &nbsp;|&nbsp; Double-tap = double jump</div>
+</div>
+
+<!-- IN-GAME BUTTONS (visible during play) -->
+<div id="pause-btn" style="display:none;position:absolute;top:8px;right:12px;z-index:16;pointer-events:all;flex-direction:row;gap:6px;">
+  <button onclick="openSkip()" style="background:rgba(126,34,206,.7);border:1px solid rgba(168,85,247,.5);border-radius:6px;color:#e9d5ff;font-family:'Space Mono',monospace;font-size:.7rem;padding:4px 10px;cursor:pointer;letter-spacing:.05em;">⏭ SKIP</button>
+  <button onclick="pauseGame()" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:#94a3b8;font-family:'Space Mono',monospace;font-size:.7rem;padding:4px 10px;cursor:pointer;letter-spacing:.05em;">⏸ PAUSE</button>
+</div>
+
+<!-- PAUSE SCREEN -->
+<div id="pause-screen" class="screen hidden" style="background:rgba(2,4,14,.96);">
+  <div class="gt" style="font-size:clamp(1.4rem,4vw,2.2rem);margin-bottom:6px;">Paused</div>
+  <div style="color:#475569;font-size:.76rem;margin-bottom:22px;" id="pause-lvl-info"></div>
+  <div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:280px;">
+    <button class="btn" onclick="resumeGame()" style="width:100%;">▶ Resume</button>
+    <button class="btn out" onclick="quitToMenu()" style="width:100%;">✕ Quit to Menu</button>
+  </div>
+  <div id="save-status" style="color:#4ade80;font-size:.72rem;margin-top:8px;"></div>
+</div>
+
+<!-- START -->
+<div id="ss" class="screen">
+  <div class="gt">FinStatement<br>Quest</div>
+  <div class="gs">Financial Statements · MBA Core</div>
+  <div class="card">
+    <h3>Learning Objectives</h3>
+    <ul>
+      <li>Identify the three core financial statements</li>
+      <li>Classify Balance Sheet, Income Statement &amp; Cash Flow items</li>
+      <li>Understand the fundamental accounting equation</li>
+      <li>Apply accrual vs. cash-basis concepts</li>
+      <li>Interpret key financial ratios and working capital</li>
+    </ul>
+  </div>
+  <p style="color:#64748b;font-size:.74rem;max-width:420px;text-align:center;line-height:1.6;margin-bottom:14px;">Auto-scroller. <strong style="color:#f0c040">Tap / Space</strong> to jump. Double-tap for double jump. Hit checkpoints to answer accounting questions. Reach the gate to finish the level.</p>
+
+  <!-- Player name row -->
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+    <span style="color:#64748b;font-size:.75rem;white-space:nowrap;">Playing as:</span>
+    <span id="home-player-name" style="color:#f0c040;font-size:.82rem;font-weight:700;cursor:pointer;text-decoration:underline dotted;" onclick="SS('name-screen');HS('ss')" title="Click to change">—</span>
+  </div>
+
+  <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;">
+      <button class="btn" onclick="newGameForPlayer()">New Game</button>
+      <button class="btn out" onclick="SS('isc');HS('ss')">How to Play</button>
+      <button class="btn out" onclick="SS('scores-screen');HS('ss');renderScoreboard()">🏆 Scores</button>
+    </div>
+    <button class="btn" id="continue-btn" onclick="continueGame()" style="display:none;background:#7e22ce;border:none;width:100%;max-width:320px;font-size:.78rem;"></button>
+  </div>
+  <div class="hint">3 lives · 10 hand-crafted levels · progress saves automatically</div>
+  <div style="margin-top:22px;text-align:center;">
+    <div style="font-size:.62rem;color:#1e293b;letter-spacing:.08em;">v1.74 · Auburn University MBA Program · Built with Claude (Anthropic)</div>
+  </div>
+</div>
+
+<!-- NAME ENTRY SCREEN -->
+<div id="name-screen" class="screen hidden" style="background:rgba(2,4,14,.97);">
+  <div class="gt" style="font-size:clamp(1.4rem,4vw,2.2rem);margin-bottom:6px;">Who's Playing?</div>
+  <p style="color:#64748b;font-size:.76rem;margin-bottom:20px;text-align:center;max-width:360px;line-height:1.5;">Enter your name to save progress and scores separately on this device.</p>
+  <input id="name-input" type="text" maxlength="20" placeholder="Your name..."
+    style="background:#0b1220;border:1.5px solid #334155;border-radius:7px;padding:12px 16px;color:#f1f5f9;font-family:'Space Mono',monospace;font-size:.9rem;width:100%;max-width:280px;margin-bottom:12px;outline:none;"
+    onkeydown="if(event.key==='Enter')confirmName()">
+  <button class="btn" onclick="confirmName()" style="margin-bottom:8px;">Confirm →</button>
+  <div id="name-error" style="color:#f87171;font-size:.74rem;height:18px;"></div>
+  <!-- Saved players list -->
+  <div id="saved-players" style="margin-top:16px;max-width:320px;width:100%;"></div>
+</div>
+
+<!-- SCOREBOARD SCREEN -->
+<div id="scores-screen" class="screen hidden" style="background:rgba(2,4,14,.97);">
+  <div class="gt" style="font-size:clamp(1.4rem,4vw,2.2rem);margin-bottom:4px;">🏆 Leaderboard</div>
+  <p style="color:#475569;font-size:.72rem;margin-bottom:16px;">Top scores saved on this device</p>
+  <div id="scoreboard-list" style="max-width:420px;width:100%;"></div>
+  <button class="btn out" onclick="SS('ss');HS('scores-screen')" style="margin-top:16px;">← Back</button>
+</div>
+
+<!-- INSTRUCTIONS -->
+<div id="isc" class="screen hidden">
+  <div class="gt" style="font-size:clamp(1.3rem,4vw,2.2rem)">How to Play</div>
+  <div class="card" style="max-width:440px;margin-top:16px;">
+    <h3>Controls</h3>
+    <ul>
+      <li>Tap / Click / Space / ↑ — Jump</li>
+      <li>Double-tap quickly — Double jump</li>
+      <li>World scrolls right automatically</li>
+    </ul>
+    <h3 style="margin-top:12px">Hazards — level resets to last checkpoint, no life lost</h3>
+    <ul>
+      <li>Gaps — fall in to reset</li>
+      <li>Floor spikes — touch to reset</li>
+      <li>Ceiling spikes — appear from level 4 onward</li>
+      <li>Moving platforms — time your jump</li>
+    </ul>
+    <h3 style="margin-top:12px">Checkpoints &amp; Gate</h3>
+    <ul>
+      <li>Levels 1–5: one checkpoint midway through</li>
+      <li>Levels 6–8: two checkpoints</li>
+      <li>Levels 9–10: four checkpoints</li>
+      <li>Wrong checkpoint answer → lose a life, retry from that checkpoint</li>
+      <li>Reach the gate → level complete!</li>
+      <li>★ Bonus CPs (levels 4, 7 &amp; 10): answer a Hard bonus question for an extra life!</li>
+    </ul>
+  </div>
+  <button class="btn" onclick="SS('ss');HS('isc')">Back</button>
+</div>
+
+<!-- QUESTION -->
+<div id="qov" class="hidden">
+  <div class="qbox">
+    <div class="cpbadge" id="qtype">Checkpoint</div>
+    <div class="qbadge" id="qbadge">Level 1 · Checkpoint 1</div>
+    <div class="qtext" id="qtext"></div>
+    <div class="qopts" id="qopts"></div>
+    <div class="qexpl" id="qexpl"></div>
+    <button class="btn" id="qcont" onclick="afterQ()">Continue →</button>
+  </div>
+</div>
+
+<!-- SKIP SCREEN -->
+<div id="skip-screen" class="screen hidden" style="background:rgba(2,4,14,.97);z-index:25;">
+  <div style="font-family:'Syne',sans-serif;font-size:clamp(1.2rem,3vw,1.8rem);font-weight:700;color:#a855f7;margin-bottom:4px;">Level Skip</div>
+  <div style="color:#475569;font-size:.75rem;margin-bottom:18px;" id="skip-progress-label">Question 1 of 2</div>
+  <div style="max-width:540px;width:100%;">
+    <div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:#7dd3fc;margin-bottom:8px;" id="skip-q-badge"></div>
+    <div style="font-family:'Syne',sans-serif;font-size:clamp(.95rem,2.5vw,1.15rem);color:#f1f5f9;line-height:1.45;margin-bottom:18px;font-weight:700;" id="skip-q-text"></div>
+    <div id="skip-q-opts" style="display:flex;flex-direction:column;gap:8px;"></div>
+    <div id="skip-q-expl" style="margin-top:12px;background:#0b1220;border-left:3px solid #a855f7;border-radius:0 6px 6px 0;padding:11px 14px;color:#334155;font-size:.78rem;line-height:1.6;display:none;white-space:pre-line;"></div>
+    <div style="margin-top:6px;color:#f87171;font-size:.74rem;" id="skip-life-msg"></div>
+  </div>
+  <button class="btn" id="skip-next-btn" onclick="skipNextAction()" style="margin-top:14px;display:none;background:#7e22ce;border:none;">Next →</button>
+  <p style="color:#1e293b;font-size:.68rem;margin-top:16px;max-width:400px;text-align:center;line-height:1.5;">Answer all questions to complete the level — no platforming required. Wrong answers still cost a life.</p>
+</div>
+
+<!-- LEVEL COMPLETE -->
+<div id="lc" class="screen hidden">
+  <div class="lcicon">🏆</div>
+  <div class="gt" style="font-size:clamp(1.5rem,5vw,2.6rem)">Level Clear!</div>
+  <div style="color:#7dd3fc;font-size:.82rem;margin-top:5px;" id="lcn"></div>
+  <div class="pbar"><div class="pfill" id="lpf" style="width:10%"></div></div>
+  <div style="color:#4ade80;font-size:.85rem;margin-bottom:16px;" id="lcs"></div>
+  <button class="btn" onclick="nextLevel()">Next Level →</button>
+</div>
+
+<!-- GAME OVER -->
+<div id="go" class="screen hidden">
+  <div style="font-size:2.6rem">💸</div>
+  <div class="gt" style="color:#f87171;font-size:clamp(1.5rem,5vw,2.6rem)">Bankrupt!</div>
+  <p style="color:#1e293b;font-size:.74rem;max-width:360px;text-align:center;margin:12px 0 20px;line-height:1.6">Out of lives. Review your financial statements notes and try again!</p>
+  <button class="btn" onclick="restartGame()">Try Again</button>
+  <button class="btn out" onclick="SS('ss');HS('go')">Main Menu</button>
+</div>
+
+<!-- WIN -->
+<div id="gw" class="screen hidden">
+  <div style="font-size:2.6rem">🎓</div>
+  <div class="gt" style="font-size:clamp(1.5rem,5vw,2.6rem)">Graduated!</div>
+  <div style="color:#7dd3fc;font-size:.75rem;margin:7px 0 3px;letter-spacing:.12em">FINANCIAL STATEMENTS MASTERED</div>
+  <div style="color:#4ade80;font-size:.9rem;margin:7px 0 16px;" id="wsc"></div>
+  <p style="color:#1e293b;font-size:.72rem;max-width:380px;text-align:center;line-height:1.6;margin-bottom:16px">Strong command of the Balance Sheet, Income Statement, and Cash Flow Statement — the three pillars of financial reporting.</p>
+  <button class="btn" onclick="restartGame()">Play Again</button>
+  <button class="btn out" onclick="SS('ss');HS('gw')">Main Menu</button>
+</div>
+
+<script>
+const SS=id=>document.getElementById(id).classList.remove('hidden');
+const HS=id=>document.getElementById(id).classList.add('hidden');
+
+// ─── QUESTION BANK ────────────────────────────────────────────────────────────
+// Pool F (FIXED):   index 0 — always used for Level 1 CP
+// Pool S (STMT_ID): indices 1-30 — "Which statement does X appear on?" — Levels 2-5
+// Pool C (CONCEPT): indices 31-59 — MBA conceptual — Levels 6-10 + all bonus Qs
+const QB=[
+
+// ══════════════════════════════════════════════════════════════════════════════
+// POOL F — FIXED (index 0)
+// ══════════════════════════════════════════════════════════════════════════════
+{d:'F',
+ q:"What is the fundamental accounting equation?",
+ o:["Revenue − Expenses = Net Income","Assets = Liabilities + Equity","Cash In − Cash Out = Net Cash","Gross Profit − Operating Expenses = Operating Income"],
+ a:1,
+ e:"Assets = Liabilities + Equity is the bedrock of double-entry accounting. Every transaction must keep this equation balanced — which is why the statement is called the Balance Sheet.",
+ oe:["This is the Income Statement equation — it describes profitability, not the balance sheet relationship.",
+     "Correct! Assets = Liabilities + Equity is the fundamental accounting equation.",
+     "This describes net cash flow — useful, but not the core accounting equation.",
+     "This is the Operating Income formula — a sub-calculation within the Income Statement, not the accounting equation."]},
+
+// ══════════════════════════════════════════════════════════════════════════════
+// POOL S — STATEMENT IDENTIFICATION (indices 1–30) — Levels 2–5
+// Options always: Balance Sheet / Income Statement / Cash Flow Statement / Statement of Retained Earnings
+// ══════════════════════════════════════════════════════════════════════════════
+
+{d:'S',
+ q:"Which financial statement does Accounts Receivable appear on?",
+ o:["Balance Sheet","Income Statement","Cash Flow Statement","Statement of Retained Earnings"],
+ a:0,
+ e:"Accounts Receivable is a current asset on the Balance Sheet — it represents money owed to the company by customers for goods or services already delivered but not yet paid for.",
+ oe:["Correct! Accounts Receivable is a current asset on the Balance Sheet.",
+     "The Income Statement reports revenues and expenses — AR is an asset, not an expense or revenue line.",
+     "The Cash Flow Statement tracks actual cash movements. AR represents revenue earned but not yet collected in cash.",
+     "The Statement of Retained Earnings shows changes in cumulative profit — it does not list individual asset accounts."]},
+
+{d:'S',
+ q:"Which financial statement does Common Stock appear on?",
+ o:["Income Statement","Cash Flow Statement","Statement of Retained Earnings","Balance Sheet"],
+ a:3,
+ e:"Common Stock is an equity account on the Balance Sheet — it represents the par value of shares issued to shareholders as contributed capital.",
+ oe:["The Income Statement reports revenues and expenses — Common Stock is an equity account, not an income or expense item.",
+     "Issuing stock appears in Financing Activities on the Cash Flow Statement as a cash inflow, but the Common Stock account itself lives on the Balance Sheet.",
+     "The Statement of Retained Earnings reconciles retained earnings specifically — Common Stock is a separate equity account on the Balance Sheet.",
+     "Correct! Common Stock is an equity account on the Balance Sheet."]},
+
+{d:'S',
+ q:"Which financial statement does Accumulated Depreciation appear on?",
+ o:["Balance Sheet","Income Statement","Cash Flow Statement","Statement of Retained Earnings"],
+ a:0,
+ e:"Accumulated Depreciation is a contra-asset account on the Balance Sheet — it offsets the gross value of long-term assets like equipment and buildings, showing their net book value.",
+ oe:["Correct! Accumulated Depreciation is a contra-asset on the Balance Sheet.",
+     "Depreciation Expense (the current period charge) appears on the Income Statement, but Accumulated Depreciation is the running total of all depreciation taken to date — that lives on the Balance Sheet.",
+     "Under the indirect method, Depreciation Expense is added back on the Cash Flow Statement — but Accumulated Depreciation itself is a Balance Sheet account.",
+     "The Statement of Retained Earnings is affected indirectly (via Net Income), but Accumulated Depreciation is a Balance Sheet contra-asset."]},
+
+{d:'S',
+ q:"Which financial statement does Bonds Payable (due in 5 years) appear on?",
+ o:["Income Statement","Statement of Retained Earnings","Cash Flow Statement","Balance Sheet"],
+ a:3,
+ e:"Bonds Payable is a long-term liability on the Balance Sheet — it represents the principal amount the company is obligated to repay to bondholders in the future.",
+ oe:["Interest Expense on the bonds appears on the Income Statement, but Bonds Payable (the principal obligation) is a Balance Sheet liability.",
+     "The Statement of Retained Earnings tracks cumulative earnings — it does not include liability accounts.",
+     "Issuing bonds creates a cash inflow on the Cash Flow Statement, but the Bonds Payable liability account itself lives on the Balance Sheet.",
+     "Correct! Bonds Payable is a long-term liability on the Balance Sheet."]},
+
+{d:'S',
+ q:"Which financial statement does Prepaid Insurance appear on?",
+ o:["Balance Sheet","Income Statement","Cash Flow Statement","Statement of Retained Earnings"],
+ a:0,
+ e:"Prepaid Insurance is a current asset on the Balance Sheet — it represents insurance premiums paid in advance that have not yet been expensed. As each period passes, the prepaid balance is reduced and Insurance Expense is recognized.",
+ oe:["Correct! Prepaid Insurance is a current asset on the Balance Sheet.",
+     "Insurance Expense appears on the Income Statement as the prepaid amount is consumed, but the remaining unused portion is an asset on the Balance Sheet.",
+     "The cash payment for insurance may flow through the Cash Flow Statement, but the Prepaid Insurance asset account itself lives on the Balance Sheet.",
+     "The Statement of Retained Earnings summarizes cumulative earnings — it does not list individual asset accounts."]},
+
+{d:'S',
+ q:"Which financial statement does Goodwill appear on?",
+ o:["Income Statement","Balance Sheet","Cash Flow Statement","Statement of Retained Earnings"],
+ a:1,
+ e:"Goodwill is a long-term intangible asset on the Balance Sheet — it arises when a company pays more than the fair value of net identifiable assets during an acquisition, representing brand value, customer relationships, and synergies.",
+ oe:["Goodwill impairment charges do appear on the Income Statement as a loss, but the Goodwill asset itself is carried on the Balance Sheet.",
+     "Correct! Goodwill is a long-term intangible asset on the Balance Sheet.",
+     "The Cash Flow Statement tracks cash — Goodwill is a non-cash intangible asset that lives on the Balance Sheet.",
+     "The Statement of Retained Earnings tracks cumulative earnings — it does not list intangible asset accounts."]},
+
+{d:'S',
+ q:"Which financial statement does Deferred Revenue appear on?",
+ o:["Cash Flow Statement","Statement of Retained Earnings","Balance Sheet","Income Statement"],
+ a:2,
+ e:"Deferred Revenue is a current liability on the Balance Sheet — the company has received cash but has not yet earned the revenue by delivering the goods or services. It represents an obligation to perform.",
+ oe:["The cash received may appear on the Cash Flow Statement, but the Deferred Revenue liability account itself lives on the Balance Sheet.",
+     "The Statement of Retained Earnings tracks cumulative earnings — it does not list liability accounts.",
+     "Correct! Deferred Revenue is a current liability on the Balance Sheet representing an unfulfilled obligation.",
+     "Revenue only moves to the Income Statement when it is earned (goods/services delivered). Until then, it sits as a liability on the Balance Sheet."]},
+
+{d:'S',
+ q:"Which financial statement does Treasury Stock appear on?",
+ o:["Balance Sheet","Income Statement","Cash Flow Statement","Statement of Retained Earnings"],
+ a:0,
+ e:"Treasury Stock is a contra-equity account on the Balance Sheet — it represents shares the company has repurchased from the market. It reduces total shareholders' equity.",
+ oe:["Correct! Treasury Stock is a contra-equity account on the Balance Sheet that reduces shareholders' equity.",
+     "The Income Statement reports revenues and expenses — Treasury Stock is an equity account, not an income or expense item.",
+     "Share repurchases appear as a cash outflow in Financing Activities on the Cash Flow Statement, but Treasury Stock itself is a Balance Sheet account.",
+     "The Statement of Retained Earnings tracks cumulative earnings — Treasury Stock is a separate contra-equity account on the Balance Sheet."]},
+
+{d:'S',
+ q:"Which financial statement does Notes Payable (due in 2 years) appear on?",
+ o:["Income Statement","Cash Flow Statement","Balance Sheet","Statement of Retained Earnings"],
+ a:2,
+ e:"Notes Payable due in 2 years is a long-term liability on the Balance Sheet — it represents a formal borrowing obligation that will not be repaid within the current year.",
+ oe:["Interest expense on the note appears on the Income Statement, but the Notes Payable balance itself is a liability on the Balance Sheet.",
+     "Receiving or repaying the note involves cash flows on the Cash Flow Statement, but the outstanding Notes Payable balance lives on the Balance Sheet.",
+     "Correct! Notes Payable due in 2 years is a long-term liability on the Balance Sheet.",
+     "The Statement of Retained Earnings tracks cumulative earnings — it does not list liability accounts."]},
+
+{d:'S',
+ q:"Which financial statement does Inventory appear on?",
+ o:["Balance Sheet","Income Statement","Cash Flow Statement","Statement of Retained Earnings"],
+ a:0,
+ e:"Inventory is a current asset on the Balance Sheet — it represents goods held for sale. When inventory is sold, its cost moves to Cost of Goods Sold on the Income Statement.",
+ oe:["Correct! Inventory is a current asset on the Balance Sheet.",
+     "Cost of Goods Sold (the cost of inventory that was sold) appears on the Income Statement, but unsold inventory remains a Balance Sheet asset.",
+     "Changes in inventory affect Operating Cash Flow on the Cash Flow Statement indirectly, but the Inventory account itself is a Balance Sheet asset.",
+     "The Statement of Retained Earnings tracks cumulative earnings — it does not list individual asset accounts."]},
+
+{d:'S',
+ q:"Which financial statement does Cost of Goods Sold appear on?",
+ o:["Balance Sheet","Statement of Retained Earnings","Cash Flow Statement","Income Statement"],
+ a:3,
+ e:"Cost of Goods Sold (COGS) is an expense on the Income Statement — it is deducted from Net Sales to arrive at Gross Profit, representing the direct cost of producing the goods sold during the period.",
+ oe:["COGS is an expense, not an asset or liability — it does not appear on the Balance Sheet. Unsold Inventory is the Balance Sheet asset.",
+     "The Statement of Retained Earnings is affected indirectly via Net Income, but COGS itself is an Income Statement line item.",
+     "Cash paid to suppliers appears on the Cash Flow Statement, but COGS on an accrual basis is an Income Statement item.",
+     "Correct! COGS is an expense on the Income Statement, deducted from revenue to calculate Gross Profit."]},
+
+{d:'S',
+ q:"Which financial statement does Depreciation Expense appear on?",
+ o:["Income Statement","Balance Sheet","Cash Flow Statement","Statement of Retained Earnings"],
+ a:0,
+ e:"Depreciation Expense is an operating expense on the Income Statement — it allocates the cost of a long-term asset over its useful life, reducing operating income each period.",
+ oe:["Correct! Depreciation Expense is an operating expense on the Income Statement.",
+     "Accumulated Depreciation (the running total) is on the Balance Sheet, but the current period's Depreciation Expense appears on the Income Statement.",
+     "Under the indirect method, Depreciation Expense is added back on the Cash Flow Statement because it is non-cash — but the expense itself originates on the Income Statement.",
+     "The Statement of Retained Earnings is affected indirectly through Net Income, but Depreciation Expense is an Income Statement item."]},
+
+{d:'S',
+ q:"Which financial statement does Interest Expense appear on?",
+ o:["Balance Sheet","Income Statement","Cash Flow Statement","Statement of Retained Earnings"],
+ a:1,
+ e:"Interest Expense appears on the Income Statement below Operating Income — it represents the cost of borrowing and reduces pre-tax income (EBT).",
+ oe:["The outstanding debt principal is on the Balance Sheet, but Interest Expense is a period cost on the Income Statement.",
+     "Correct! Interest Expense is on the Income Statement, reducing earnings before taxes.",
+     "Cash paid for interest may appear on the Cash Flow Statement, but Interest Expense under accrual accounting is recognized on the Income Statement in the period incurred.",
+     "The Statement of Retained Earnings is affected via Net Income, but Interest Expense itself is an Income Statement item."]},
+
+{d:'S',
+ q:"Which financial statement does Sales Revenue appear on?",
+ o:["Balance Sheet","Statement of Retained Earnings","Income Statement","Cash Flow Statement"],
+ a:2,
+ e:"Sales Revenue is the top line of the Income Statement — it represents the total value of goods and services sold during the period, recognized when the performance obligation is satisfied under accrual accounting.",
+ oe:["Revenue is an Income Statement item — it does not appear as an asset or liability on the Balance Sheet.",
+     "The Statement of Retained Earnings uses Net Income (which includes Revenue) as an input, but Revenue itself is recorded on the Income Statement.",
+     "Correct! Sales Revenue is the top line of the Income Statement.",
+     "Cash received from customers appears on the Cash Flow Statement, but Revenue under accrual accounting is recognized when earned regardless of cash timing."]},
+
+{d:'S',
+ q:"Which financial statement does Income Tax Expense appear on?",
+ o:["Cash Flow Statement","Balance Sheet","Statement of Retained Earnings","Income Statement"],
+ a:3,
+ e:"Income Tax Expense appears at the bottom of the Income Statement — it is deducted from pre-tax income (EBT) to arrive at Net Income. It represents the accrual-basis tax obligation for the period.",
+ oe:["Cash paid for taxes appears on the Cash Flow Statement as an Operating outflow, but Income Tax Expense under accrual accounting is an Income Statement item.",
+     "Taxes Payable (the liability for taxes owed but not yet paid) is on the Balance Sheet, but Income Tax Expense is an Income Statement item.",
+     "The Statement of Retained Earnings is affected via Net Income, but Income Tax Expense belongs on the Income Statement.",
+     "Correct! Income Tax Expense is on the Income Statement, deducted from pre-tax income to arrive at Net Income."]},
+
+{d:'S',
+ q:"Which financial statement does Rent Expense appear on?",
+ o:["Income Statement","Balance Sheet","Cash Flow Statement","Statement of Retained Earnings"],
+ a:0,
+ e:"Rent Expense is an operating expense on the Income Statement — it is recognized in the period the space is occupied, reducing operating income under the accrual method.",
+ oe:["Correct! Rent Expense is an operating expense on the Income Statement.",
+     "Prepaid Rent (rent paid in advance) is a current asset on the Balance Sheet, but Rent Expense (the used portion) appears on the Income Statement.",
+     "Cash paid for rent appears on the Cash Flow Statement as an Operating outflow, but Rent Expense under accrual accounting is an Income Statement item.",
+     "The Statement of Retained Earnings is affected via Net Income, but Rent Expense itself is an Income Statement operating expense."]},
+
+{d:'S',
+ q:"Which financial statement does a Gain on Sale of Equipment appear on?",
+ o:["Balance Sheet","Statement of Retained Earnings","Cash Flow Statement","Income Statement"],
+ a:3,
+ e:"A Gain on Sale of Equipment appears on the Income Statement as Other Income — it is recognized when equipment is sold for more than its book value, increasing pre-tax income.",
+ oe:["The remaining equipment (if any) stays on the Balance Sheet, but the gain itself is recognized as Other Income on the Income Statement.",
+     "The Statement of Retained Earnings is affected via Net Income, but the Gain on Sale is an Income Statement item.",
+     "The cash proceeds from the sale appear in Investing Activities on the Cash Flow Statement (and the gain is removed from Operating Activities), but the gain itself originates on the Income Statement.",
+     "Correct! A Gain on Sale of Equipment is Other Income on the Income Statement."]},
+
+{d:'S',
+ q:"Which financial statement does Research & Development Expense appear on?",
+ o:["Balance Sheet","Income Statement","Cash Flow Statement","Statement of Retained Earnings"],
+ a:1,
+ e:"Under US GAAP, R&D costs are expensed as incurred on the Income Statement — they cannot be capitalized as an intangible asset regardless of expected future benefit.",
+ oe:["Under US GAAP, R&D cannot be capitalized as a Balance Sheet asset. (Note: IFRS allows development costs to be capitalized under certain conditions.)",
+     "Correct! R&D Expense is expensed as incurred on the Income Statement under US GAAP.",
+     "Cash paid for R&D flows through the Cash Flow Statement as an Operating outflow, but R&D Expense under accrual accounting is an Income Statement item.",
+     "The Statement of Retained Earnings is affected via Net Income, but R&D Expense itself is an Income Statement item."]},
+
+{d:'S',
+ q:"Which financial statement does Salaries Expense appear on?",
+ o:["Balance Sheet","Cash Flow Statement","Statement of Retained Earnings","Income Statement"],
+ a:3,
+ e:"Salaries Expense is an operating expense on the Income Statement — it is recognized in the period employees perform the work, reducing operating income under the accrual method.",
+ oe:["Salaries Payable (accrued but unpaid wages) is a liability on the Balance Sheet, but Salaries Expense (the period cost) is on the Income Statement.",
+     "Cash paid to employees appears in Operating Activities on the Cash Flow Statement, but Salaries Expense under accrual accounting is an Income Statement item.",
+     "The Statement of Retained Earnings is affected via Net Income, but Salaries Expense itself is an Income Statement item.",
+     "Correct! Salaries Expense is an operating expense on the Income Statement."]},
+
+{d:'S',
+ q:"Which financial statement does a Loss on Disposal of an Asset appear on?",
+ o:["Cash Flow Statement","Balance Sheet","Income Statement","Statement of Retained Earnings"],
+ a:2,
+ e:"A Loss on Disposal appears on the Income Statement as Other Expense — it is recognized when an asset is sold or disposed of for less than its book value.",
+ oe:["The cash received from disposal appears in Investing Activities on the Cash Flow Statement, but the Loss itself originates on the Income Statement.",
+     "Once disposed, the asset is removed from the Balance Sheet — the loss is an Income Statement item.",
+     "Correct! A Loss on Disposal of an Asset is Other Expense on the Income Statement.",
+     "The Statement of Retained Earnings is affected via Net Income, but the Loss on Disposal is an Income Statement item."]},
+
+{d:'S',
+ q:"Which financial statement does 'cash received from customers' appear on?",
+ o:["Balance Sheet","Income Statement","Statement of Retained Earnings","Cash Flow Statement"],
+ a:3,
+ e:"Cash received from customers is an Operating Activity inflow on the Cash Flow Statement — it represents actual cash collected, which may differ from Revenue recognized on the Income Statement under accrual accounting.",
+ oe:["Cash received increases the Cash account on the Balance Sheet, but 'cash received from customers' as a descriptive line item belongs on the Cash Flow Statement.",
+     "Revenue is recognized on the Income Statement when earned. 'Cash received from customers' specifically tracks cash timing — that belongs on the Cash Flow Statement.",
+     "The Statement of Retained Earnings tracks cumulative earnings — it does not list cash flow line items.",
+     "Correct! Cash received from customers is an Operating Activity inflow on the Cash Flow Statement."]},
+
+{d:'S',
+ q:"Which financial statement does 'cash paid to suppliers' appear on?",
+ o:["Income Statement","Cash Flow Statement","Balance Sheet","Statement of Retained Earnings"],
+ a:1,
+ e:"Cash paid to suppliers is an Operating Activity outflow on the Cash Flow Statement — it reflects actual cash disbursements for inventory and supplies, which may differ from COGS on the Income Statement under accrual accounting.",
+ oe:["COGS appears on the Income Statement on an accrual basis. 'Cash paid to suppliers' is the actual cash outflow — it belongs on the Cash Flow Statement.",
+     "Correct! Cash paid to suppliers is an Operating Activity outflow on the Cash Flow Statement.",
+     "Accounts Payable (the liability to suppliers) is on the Balance Sheet, but 'cash paid to suppliers' as an actual payment belongs on the Cash Flow Statement.",
+     "The Statement of Retained Earnings tracks cumulative earnings — it does not list cash payment items."]},
+
+{d:'S',
+ q:"Which financial statement does 'proceeds from issuing bonds' appear on?",
+ o:["Balance Sheet","Statement of Retained Earnings","Income Statement","Cash Flow Statement"],
+ a:3,
+ e:"Proceeds from issuing bonds is a Financing Activity inflow on the Cash Flow Statement — it represents cash raised by borrowing through bond issuance.",
+ oe:["Bonds Payable (the resulting liability) appears on the Balance Sheet, but the cash received from issuing bonds is a Financing Activity on the Cash Flow Statement.",
+     "The Statement of Retained Earnings tracks cumulative earnings — debt issuance does not affect retained earnings directly.",
+     "The Income Statement reports revenues and expenses — bond proceeds are a financing transaction, not revenue.",
+     "Correct! Proceeds from issuing bonds is a Financing Activity inflow on the Cash Flow Statement."]},
+
+{d:'S',
+ q:"Which financial statement does 'purchase of property and equipment' appear on?",
+ o:["Cash Flow Statement","Income Statement","Balance Sheet","Statement of Retained Earnings"],
+ a:0,
+ e:"Cash paid to purchase property and equipment (CapEx) is an Investing Activity outflow on the Cash Flow Statement — it represents cash deployed to acquire long-term productive assets.",
+ oe:["Correct! Purchase of property and equipment is an Investing Activity outflow on the Cash Flow Statement.",
+     "Depreciation Expense (spreading the cost over time) appears on the Income Statement, but the cash purchase itself is an Investing Activity on the Cash Flow Statement.",
+     "The acquired property and equipment appears as a long-term asset on the Balance Sheet, but the cash outflow for the purchase belongs on the Cash Flow Statement.",
+     "The Statement of Retained Earnings tracks cumulative earnings — capital expenditures do not directly affect retained earnings."]},
+
+{d:'S',
+ q:"Which financial statement does 'cash dividends paid' appear on?",
+ o:["Income Statement","Statement of Retained Earnings","Balance Sheet","Cash Flow Statement"],
+ a:3,
+ e:"Cash dividends paid is a Financing Activity outflow on the Cash Flow Statement — it represents cash returned to shareholders, reflecting a capital structure decision.",
+ oe:["Dividends are not an expense — they do not appear on the Income Statement. They are distributions of profit to shareholders.",
+     "The Statement of Retained Earnings shows dividends declared (which reduce retained earnings), but 'cash dividends paid' as an actual cash outflow belongs on the Cash Flow Statement.",
+     "Dividends Payable (declared but not yet paid) is a current liability on the Balance Sheet, but 'cash dividends paid' as a cash outflow belongs on the Cash Flow Statement.",
+     "Correct! Cash dividends paid is a Financing Activity outflow on the Cash Flow Statement."]},
+
+{d:'S',
+ q:"Which financial statement does 'proceeds from sale of investments' appear on?",
+ o:["Income Statement","Balance Sheet","Statement of Retained Earnings","Cash Flow Statement"],
+ a:3,
+ e:"Proceeds from sale of investments is an Investing Activity inflow on the Cash Flow Statement — selling long-term investments converts them back to cash, which is classified as an investing transaction.",
+ oe:["Any gain or loss on the sale would appear on the Income Statement, but the total cash proceeds from the sale are an Investing Activity on the Cash Flow Statement.",
+     "The investment balance (before sale) appeared on the Balance Sheet, but once sold, the cash received is captured in Investing Activities on the Cash Flow Statement.",
+     "The Statement of Retained Earnings tracks cumulative earnings — it does not list individual cash flow items.",
+     "Correct! Proceeds from sale of investments is an Investing Activity inflow on the Cash Flow Statement."]},
+
+{d:'S',
+ q:"Which financial statement does 'repayment of long-term debt' appear on?",
+ o:["Balance Sheet","Cash Flow Statement","Income Statement","Statement of Retained Earnings"],
+ a:1,
+ e:"Repayment of long-term debt is a Financing Activity outflow on the Cash Flow Statement — retiring debt is a capital structure decision reported in the Financing section.",
+ oe:["The remaining debt balance after repayment decreases on the Balance Sheet, but 'repayment of long-term debt' as a cash outflow is a Financing Activity on the Cash Flow Statement.",
+     "Correct! Repayment of long-term debt is a Financing Activity outflow on the Cash Flow Statement.",
+     "Interest paid on the debt may appear in Operating Activities, but the principal repayment itself is a Financing Activity on the Cash Flow Statement.",
+     "The Statement of Retained Earnings tracks cumulative earnings — debt repayment does not directly affect retained earnings."]},
+
+{d:'S',
+ q:"Which financial statement does 'cash paid for income taxes' appear on?",
+ o:["Statement of Retained Earnings","Income Statement","Cash Flow Statement","Balance Sheet"],
+ a:2,
+ e:"Cash paid for income taxes is an Operating Activity outflow on the Cash Flow Statement — it reflects actual tax payments made during the period, which may differ from Income Tax Expense on the Income Statement.",
+ oe:["The Statement of Retained Earnings tracks cumulative earnings — it does not list cash payment items.",
+     "Income Tax Expense appears on the Income Statement on an accrual basis. 'Cash paid for income taxes' is the actual cash outflow — it belongs on the Cash Flow Statement.",
+     "Correct! Cash paid for income taxes is an Operating Activity outflow on the Cash Flow Statement.",
+     "Taxes Payable (accrued but unpaid taxes) is a liability on the Balance Sheet, but 'cash paid for income taxes' as a cash outflow belongs on the Cash Flow Statement."]},
+
+{d:'S',
+ q:"Which financial statement does 'cash paid for interest' appear on?",
+ o:["Income Statement","Balance Sheet","Statement of Retained Earnings","Cash Flow Statement"],
+ a:3,
+ e:"Under US GAAP, cash paid for interest is an Operating Activity outflow on the Cash Flow Statement — it reflects actual interest payments, which may differ from Interest Expense accrued on the Income Statement.",
+ oe:["Interest Expense is recognized on the Income Statement under accrual accounting. 'Cash paid for interest' is the actual cash payment — it belongs on the Cash Flow Statement.",
+     "Interest Payable (accrued but unpaid interest) is a liability on the Balance Sheet, but the actual cash payment for interest belongs on the Cash Flow Statement.",
+     "The Statement of Retained Earnings tracks cumulative earnings — it does not list cash payment items.",
+     "Correct! Cash paid for interest is an Operating Activity outflow on the Cash Flow Statement (under US GAAP)."]},
+
+{d:'S',
+ q:"Which financial statement does 'proceeds from issuing common stock' appear on?",
+ o:["Balance Sheet","Income Statement","Cash Flow Statement","Statement of Retained Earnings"],
+ a:2,
+ e:"Proceeds from issuing common stock is a Financing Activity inflow on the Cash Flow Statement — raising equity capital is a capital structure decision reported in the Financing section.",
+ oe:["Common Stock and Additional Paid-In Capital (the resulting equity accounts) appear on the Balance Sheet, but 'proceeds from issuing stock' as a cash inflow belongs on the Cash Flow Statement.",
+     "Issuing stock is a financing transaction, not revenue — it does not appear on the Income Statement.",
+     "Correct! Proceeds from issuing common stock is a Financing Activity inflow on the Cash Flow Statement.",
+     "The Statement of Retained Earnings tracks cumulative earnings — issuing stock affects Paid-In Capital, not Retained Earnings."]},
+
+// ══════════════════════════════════════════════════════════════════════════════
+// POOL C — CONCEPTUAL (indices 31–59) — Levels 6–10 + all Bonus questions
+// ══════════════════════════════════════════════════════════════════════════════
+
+{d:'C',
+ q:"A company's Operating Cash Flow is consistently higher than its Net Income. What does this most likely indicate?",
+ o:["The company is recognizing revenue too aggressively","The company has strong non-cash charges and favorable working capital management","The company is paying too much in taxes","The company's capital expenditures are very low"],
+ a:1,
+ e:"When OCF exceeds Net Income, it typically means the company has large non-cash expenses (like depreciation) added back, and/or collects cash faster than it recognizes revenue. This is generally a sign of high earnings quality.",
+ oe:["Aggressive revenue recognition would inflate Net Income above OCF — the opposite situation. Here OCF exceeds Net Income, suggesting conservative, well-backed earnings.",
+     "Correct! Large non-cash charges (depreciation, amortization) and favorable working capital dynamics cause OCF to exceed Net Income — a positive quality signal.",
+     "High taxes reduce both Net Income and OCF — they would not systematically cause OCF to exceed Net Income.",
+     "Low CapEx improves Free Cash Flow but does not directly cause Operating Cash Flow to exceed Net Income."]},
+
+{d:'C',
+ q:"Why might two companies in the same industry have very different P/E ratios even if their current earnings are similar?",
+ o:["Accounting standards require different P/E calculations for different industries","The P/E ratio only reflects past earnings, so historical differences drive the gap","Investors price in expected future growth rates, risk profiles, and business quality differently","P/E ratios are only meaningful when comparing across different industries"],
+ a:2,
+ e:"The P/E ratio reflects what investors pay per dollar of current earnings — it is forward-looking. Companies with higher expected growth, lower risk, or stronger competitive positions command higher P/E multiples even with similar current earnings.",
+ oe:["Accounting standards do not require different P/E methodologies by industry — P/E is calculated the same way for all companies.",
+     "While P/E uses reported earnings, it is fundamentally forward-looking — investors pay today's price based on future expectations, not just historical performance.",
+     "Correct! P/E ratios reflect differences in expected growth, risk, and business quality — not just current earnings.",
+     "P/E ratios are most comparable within the same industry — cross-industry comparisons are actually less meaningful."]},
+
+{d:'C',
+ q:"Under the direct method of the Cash Flow Statement, which of the following appears as a line item in Operating Activities?",
+ o:["Depreciation Expense","Change in Accounts Receivable","Cash received from customers","Net Income"],
+ a:2,
+ e:"The direct method lists actual gross cash receipts and payments — 'cash received from customers' is a direct operating inflow. The indirect method starts with Net Income and adjusts for non-cash items and working capital changes.",
+ oe:["Depreciation Expense is a non-cash item added back under the indirect method — the direct method does not list non-cash adjustments.",
+     "Change in Accounts Receivable is a working capital adjustment used under the indirect method — the direct method lists actual cash flows, not balance sheet changes.",
+     "Correct! The direct method lists actual cash receipts like 'cash received from customers' as Operating Activity line items.",
+     "Net Income is the starting point of the indirect method — the direct method does not begin with Net Income."]},
+
+{d:'C',
+ q:"A company capitalizes a cost that should have been expensed. What is the immediate effect on the financial statements?",
+ o:["Net Income is understated and assets are understated","Net Income is overstated and assets are overstated","Net Income is unaffected but cash flow decreases","Liabilities increase and equity decreases"],
+ a:1,
+ e:"Capitalizing instead of expensing means the cost goes to the Balance Sheet as an asset rather than hitting the Income Statement as an expense — overstating both assets and Net Income in the current period.",
+ oe:["Capitalizing inflates (not deflates) both assets and Net Income — the expense is deferred rather than recognized now.",
+     "Correct! Improper capitalization overstates both assets (Balance Sheet) and Net Income (Income Statement) in the current period.",
+     "Cash flow is unaffected (the cash was spent either way), but Net Income IS overstated when a cost is improperly capitalized.",
+     "Liabilities are not directly affected — assets increase and equity increases (via higher Net Income), not the reverse."]},
+
+{d:'C',
+ q:"A company has a Debt-to-EBITDA ratio of 6x. What does this most likely signal to a lender?",
+ o:["The company is conservatively financed and low risk","The company generates six times more EBITDA than debt, which is healthy","The company carries significant debt relative to its earnings power, raising repayment concerns","The company has a P/E ratio of 6, indicating undervaluation"],
+ a:2,
+ e:"Debt-to-EBITDA measures how many years of EBITDA it would take to repay all debt. A ratio of 6x is considered high — most lenders become concerned above 4–5x, as it suggests the company may struggle to service its debt.",
+ oe:["Conservative financing produces a low Debt-to-EBITDA (1–2x). A ratio of 6x indicates significant leverage, not conservative financing.",
+     "The ratio means debt is 6 times EBITDA — the company has far more debt than earnings power. You have the interpretation reversed.",
+     "Correct! Debt-to-EBITDA of 6x means it would take 6 years of EBITDA to repay debt — lenders generally consider above 4–5x a red flag.",
+     "Debt-to-EBITDA and P/E are completely different metrics. P/E = Stock Price ÷ Earnings Per Share."]},
+
+{d:'C',
+ q:"How does a stock buyback (share repurchase) affect Return on Equity (ROE)?",
+ o:["ROE decreases because cash (an asset) is reduced","ROE increases because equity is reduced while Net Income stays the same","ROE is unaffected because buybacks are a financing decision","ROE decreases because the number of shares outstanding increases"],
+ a:1,
+ e:"ROE = Net Income ÷ Shareholders' Equity. A buyback reduces equity (via Treasury Stock) without immediately changing Net Income — the denominator shrinks, so ROE increases. This is one reason companies use buybacks to engineer higher reported ROE.",
+ oe:["Cash decreasing reduces assets, but the buyback equally reduces equity. The key ROE effect comes from the equity denominator shrinking.",
+     "Correct! Buybacks reduce shareholders' equity (the ROE denominator) while Net Income is unchanged — ROE therefore increases.",
+     "Buybacks do affect ROE because they reduce the equity base — the denominator of the ratio changes.",
+     "Buybacks reduce shares outstanding (not increase them), which raises EPS — but the ROE effect comes from the reduction in equity."]},
+
+{d:'C',
+ q:"Which of the following best explains why GAAP Net Income can differ significantly from taxable income?",
+ o:["GAAP prohibits the use of accelerated depreciation","Permanent and temporary differences arise from different rules for recognizing revenues and expenses","Tax authorities always require cash-basis accounting","GAAP Net Income and taxable income must be reconciled to zero each year"],
+ a:1,
+ e:"GAAP and tax rules often recognize revenues and expenses in different periods. Temporary differences (e.g., depreciation timing) reverse over time and create deferred tax assets/liabilities. Permanent differences (e.g., tax-exempt income) never reverse.",
+ oe:["GAAP permits accelerated depreciation. The issue is that GAAP and tax rules may use different methods, creating a timing difference.",
+     "Correct! Permanent and temporary differences between GAAP and tax rules cause Net Income to differ from taxable income.",
+     "Tax authorities use their own accrual-based rules — they do not require cash-basis accounting.",
+     "There is no requirement to reconcile GAAP Net Income to taxable income to zero — differences are tracked through deferred tax accounts."]},
+
+{d:'C',
+ q:"A company reports strong Net Income but consistently burns cash from operations. What is the most likely explanation?",
+ o:["The company has very high capital expenditures","Revenue is being recognized before cash is collected, building up Accounts Receivable","The company is paying large dividends each period","The company has very low depreciation expense"],
+ a:1,
+ e:"When Net Income is strong but Operating Cash Flow is negative, revenue is likely being recognized long before cash arrives. AR builds up, cash is not collected, and OCF suffers — a classic earnings quality warning sign.",
+ oe:["High CapEx reduces Investing Cash Flow and Free Cash Flow — but it does not affect Operating Cash Flow, which is the section showing the burn.",
+     "Correct! Premature revenue recognition or slow cash collection causes Net Income to exceed OCF, with AR building up on the Balance Sheet.",
+     "Dividend payments reduce Financing Cash Flow — they do not affect Operating Cash Flow.",
+     "Low depreciation reduces the non-cash add-back in Operating Activities slightly, but the primary driver of this pattern is revenue recognized without corresponding cash collection."]},
+
+{d:'C',
+ q:"What is the key difference between a finance lease and an operating lease for the lessee?",
+ o:["Finance leases are always shorter in duration than operating leases","A finance lease puts an asset and liability on the Balance Sheet; an operating lease historically did not","Finance leases are only used for equipment, not real estate","Operating leases are always more expensive than finance leases"],
+ a:1,
+ e:"A finance lease transfers substantially all risks and rewards of ownership — the lessee records a Right-of-Use Asset and Lease Liability on the Balance Sheet. Under ASC 842/IFRS 16, both are now on-balance-sheet, but income statement treatment still differs (interest + depreciation vs. straight-line rent).",
+ oe:["Lease duration is one factor in classification but not the defining difference — economic substance (risk/reward transfer) determines classification.",
+     "Correct! Finance leases result in on-balance-sheet asset and liability recognition; the income statement treatment also differs from operating leases.",
+     "Finance leases apply to any asset type — real estate, equipment, vehicles, and more.",
+     "Cost depends on lease terms and rates, not classification — an operating lease is not inherently more or less expensive."]},
+
+{d:'C',
+ q:"Under purchase accounting for an acquisition, goodwill is subsequently impaired. What is the financial statement effect?",
+ o:["Goodwill increases and Net Income increases","Goodwill decreases on the Balance Sheet and Net Income decreases by the impairment amount","Cash decreases and liabilities increase","Goodwill decreases but Net Income is unaffected because impairment is non-cash"],
+ a:1,
+ e:"Goodwill impairment is a non-cash charge: it reduces the Goodwill asset on the Balance Sheet and is recognized as an Impairment Loss on the Income Statement, reducing Net Income. On the Cash Flow Statement, it is added back as a non-cash item.",
+ oe:["Impairment reduces (not increases) Goodwill and reduces (not increases) Net Income.",
+     "Correct! Impairment reduces the Goodwill asset (Balance Sheet) and records an Impairment Loss (Income Statement), reducing Net Income.",
+     "Goodwill impairment is non-cash — no cash leaves the company and no new liability is created.",
+     "Although impairment is non-cash (added back on the CFS), it absolutely reduces Net Income on the Income Statement — the income impact is real."]},
+
+{d:'C',
+ q:"A company switches from FIFO to LIFO during a period of rising prices. What happens to COGS, Net Income, and ending inventory?",
+ o:["COGS decreases, Net Income increases, ending inventory increases","COGS increases, Net Income decreases, ending inventory decreases","COGS decreases, Net Income decreases, ending inventory increases","COGS increases, Net Income increases, ending inventory decreases"],
+ a:1,
+ e:"Under LIFO during inflation, the most recently purchased (most expensive) items are assumed sold first — COGS rises, Gross Profit and Net Income fall. The remaining inventory (oldest, cheapest units) produces a lower ending inventory balance.",
+ oe:["Under LIFO with rising prices, COGS increases (not decreases) — the newest, most expensive units are sold first.",
+     "Correct! LIFO in inflation: COGS up, Net Income down, ending inventory down (older, cheaper units remain on the Balance Sheet).",
+     "COGS does not decrease under LIFO during inflation — the newest, most expensive inventory is sold first, raising COGS.",
+     "COGS increases under LIFO during inflation, which reduces Gross Profit and Net Income — not increases them."]},
+
+{d:'C',
+ q:"Which financial metric best captures a company's ability to service its debt from ongoing operations?",
+ o:["Current Ratio","Net Profit Margin","Interest Coverage Ratio (EBIT ÷ Interest Expense)","Gross Margin"],
+ a:2,
+ e:"The Interest Coverage Ratio (EBIT ÷ Interest Expense) measures how many times operating earnings cover interest obligations. A ratio above 2–3x is generally adequate; below 1.5x raises significant concern.",
+ oe:["The Current Ratio measures short-term liquidity (current assets vs. current liabilities) — it does not specifically address debt service capacity from operations.",
+     "Net Profit Margin measures overall profitability as a percentage of revenue — it does not directly measure the ability to cover interest payments.",
+     "Correct! The Interest Coverage Ratio directly measures how well operating earnings cover debt service costs.",
+     "Gross Margin measures profitability on core sales before operating expenses — it does not account for interest obligations."]},
+
+{d:'C',
+ q:"What does Days Payable Outstanding (DPO) measure, and why might a high DPO be both a strength and a concern?",
+ o:["DPO measures how fast inventory sells; high DPO always signals operational efficiency","DPO measures how long a company takes to pay suppliers; high DPO preserves cash but may strain supplier relationships","DPO measures customer collection speed; high DPO means customers pay slowly","DPO only measures the cash conversion cycle and has no positive interpretation"],
+ a:1,
+ e:"DPO = Accounts Payable ÷ (COGS/365). A high DPO means the company takes longer to pay suppliers — preserving cash (a working capital benefit) but risking supplier relationship strain or tighter terms.",
+ oe:["Days Inventory Outstanding (DIO) measures how fast inventory sells — DPO specifically measures how long the company takes to pay its suppliers.",
+     "Correct! High DPO preserves cash (working capital benefit) but risks supplier relationship strain or loss of early payment discounts.",
+     "Days Sales Outstanding (DSO) measures how long customers take to pay — DPO measures how long the company takes to pay its suppliers.",
+     "DPO has a legitimate positive interpretation — extending payables is a common working capital management strategy for companies with strong supplier negotiating power."]},
+
+{d:'C',
+ q:"A company has a Current Ratio of 2.5 but a Quick Ratio of 0.6. What does this tell you?",
+ o:["The company is highly liquid by any measure","The company's current assets are mostly inventory; liquidity depends heavily on selling that inventory","The company's receivables collection is very slow","The company has too much cash and not enough productive assets"],
+ a:1,
+ e:"The gap between a high Current Ratio and a low Quick Ratio (which excludes inventory) reveals that most current assets are locked in inventory. If inventory cannot be sold quickly, the company may struggle to meet short-term obligations.",
+ oe:["The Quick Ratio of 0.6 indicates poor immediate liquidity — liquid assets cover only 60% of current liabilities. The company is NOT highly liquid by every measure.",
+     "Correct! A high Current Ratio with a low Quick Ratio signals inventory-heavy current assets — immediate liquidity is contingent on selling that inventory.",
+     "Slow receivables would drag down the Quick Ratio somewhat, but here the dominant issue is the large inventory balance.",
+     "Excess cash would improve both ratios equally — the problem here is too much inventory relative to liquid assets."]},
+
+{d:'C',
+ q:"What is the difference between a temporary and a permanent difference in tax accounting?",
+ o:["Temporary differences are small in amount; permanent differences are large","Temporary differences reverse over time creating deferred taxes; permanent differences never reverse and shift the effective tax rate","Temporary differences only apply to depreciation; permanent differences apply to all other items","Permanent differences create deferred tax assets; temporary differences create deferred tax liabilities"],
+ a:1,
+ e:"Temporary differences (e.g., depreciation timing) create Deferred Tax Assets or Liabilities that reverse in future periods. Permanent differences (e.g., tax-exempt interest, non-deductible fines) never reverse, causing the effective tax rate to permanently diverge from the statutory rate.",
+ oe:["The distinction is about timing of reversal, not the size of the amount.",
+     "Correct! Temporary differences reverse and create deferred taxes; permanent differences never reverse and affect the effective tax rate.",
+     "Temporary differences arise from many sources — depreciation is the most common example, but revenue recognition, stock compensation, and warranty accruals also create them.",
+     "Both permanent and temporary differences can create either Deferred Tax Assets or Liabilities depending on direction — the classification depends on whether more or less tax is paid now vs. later."]},
+
+{d:'C',
+ q:"When is revenue recognized under the completed-contract method versus the percentage-of-completion method?",
+ o:["Completed-contract recognizes revenue when cash is received; percentage-of-completion when billed","Completed-contract defers all revenue until the project is finished; percentage-of-completion recognizes revenue as work progresses","Both methods recognize revenue at the same time but differ in expense treatment","Percentage-of-completion is only used for contracts under one year"],
+ a:1,
+ e:"Under completed-contract, all revenue and profit are deferred until the project is fully complete. Under percentage-of-completion, revenue is recognized proportionally as work is performed — typically measured by costs incurred relative to total estimated costs.",
+ oe:["Neither method uses cash receipt as the trigger — both are accrual-based. The difference is when the performance obligation is considered satisfied.",
+     "Correct! Completed-contract defers all revenue to completion; percentage-of-completion recognizes revenue proportionally as work progresses.",
+     "Both methods differ in revenue timing, not just expense treatment — the Income Statement impact in each period is materially different.",
+     "Percentage-of-completion is specifically designed for long-term multi-year contracts — it would be less relevant for short contracts under one year."]},
+
+{d:'C',
+ q:"A company issues a convertible bond at par. How does this affect the Balance Sheet at issuance under US GAAP?",
+ o:["Liabilities increase and equity is unchanged","Both liabilities and equity increase by different amounts reflecting the debt and equity components","Cash increases and equity increases by the full face value","Liabilities decrease because the conversion feature reduces the debt obligation"],
+ a:0,
+ e:"Under US GAAP, a convertible bond is recorded entirely as a liability at issuance — no equity component is bifurcated (unlike IFRS, which splits it). Cash increases and Bonds Payable increases by the same amount; equity is unchanged.",
+ oe:["Correct! Under US GAAP, a convertible bond is recorded as a single liability — Cash increases and Bonds Payable increases, equity is unchanged.",
+     "Splitting into debt and equity components is the IFRS treatment (IAS 32) — under US GAAP, convertible bonds are recorded entirely as liabilities at issuance.",
+     "Cash does increase by the full proceeds, but under US GAAP the entire amount goes to Bonds Payable (liability), not equity.",
+     "The conversion feature does not reduce the liability at issuance under US GAAP — the full face value is recorded as a liability until converted or repaid."]},
+
+{d:'C',
+ q:"What does negative Working Capital indicate, and can it ever be a sign of a healthy business?",
+ o:["Negative Working Capital always signals impending bankruptcy","It means current liabilities exceed current assets; it can indicate financial stress but in some business models reflects efficient operations","Negative Working Capital means the company has too many long-term assets","It only occurs when a company has a negative cash balance"],
+ a:1,
+ e:"Negative Working Capital means current liabilities exceed current assets. For most companies this is concerning, but in some models (e.g., grocery retail, subscription businesses) customers pay before delivery and suppliers are paid later — creating a natural, healthy cash float.",
+ oe:["Negative Working Capital can signal distress in capital-intensive businesses, but in retail or subscription models it often reflects efficient cash management and strong supplier negotiating power.",
+     "Correct! Negative Working Capital is context-dependent — stressful in most industries, but a competitive advantage in certain business models.",
+     "Long-term assets are not current assets or liabilities — they do not affect the Working Capital calculation.",
+     "Negative cash is one scenario, but Negative Working Capital more commonly results from large Deferred Revenue, Accounts Payable, or other current liabilities exceeding current assets."]},
+
+{d:'C',
+ q:"Under the indirect method, how is a gain on sale of equipment treated in Operating Activities?",
+ o:["It is added to Net Income because it represents positive value creation","It is subtracted from Net Income because the cash inflow belongs in Investing Activities","It is ignored entirely because the sale is not an operating event","It is reported as a separate operating inflow line item"],
+ a:1,
+ e:"Under the indirect method, the gain is subtracted from Net Income in Operating Activities to eliminate it — the actual cash proceeds from the sale are fully reported in Investing Activities. Including it in both would double-count the cash.",
+ oe:["The gain already increased Net Income, but the cash belongs in Investing Activities — subtracting it from Operating Activities removes the double-count.",
+     "Correct! The gain is removed from Operating Activities (subtracted) because the full cash proceeds are reported in Investing Activities.",
+     "The gain is not ignored — it is explicitly subtracted in Operating Activities and the full cash proceeds appear in Investing Activities.",
+     "The gain is not listed separately as an operating item — it is netted out as a reconciling adjustment from Net Income to Operating Cash Flow."]},
+
+{d:'C',
+ q:"What is the purpose of DuPont analysis, and what three components does it decompose ROE into?",
+ o:["DuPont calculates P/E ratio using Net Margin, Asset Turnover, and Leverage","DuPont decomposes ROE into Net Profit Margin, Asset Turnover, and Financial Leverage (Equity Multiplier)","DuPont measures liquidity using the Current Ratio, Quick Ratio, and Cash Ratio","DuPont decomposes EBITDA into Operating Margin, Depreciation Rate, and Tax Rate"],
+ a:1,
+ e:"DuPont ROE = Net Profit Margin (NI/Revenue) × Asset Turnover (Revenue/Assets) × Equity Multiplier (Assets/Equity). This reveals whether ROE is driven by profitability, efficiency, or leverage — helping diagnose the source of performance.",
+ oe:["DuPont analyzes ROE, not P/E. The three components are Net Margin, Asset Turnover, and Equity Multiplier.",
+     "Correct! DuPont = Net Profit Margin × Asset Turnover × Equity Multiplier — decomposing ROE into profitability, efficiency, and leverage drivers.",
+     "DuPont analyzes ROE using Income Statement and Balance Sheet components — it is not a liquidity analysis framework.",
+     "DuPont works with ROE components, not EBITDA — it is not a decomposition of operating earnings."]},
+
+{d:'C',
+ q:"A company's gross margin is declining while revenue is growing. What are the most likely causes?",
+ o:["The company is recognizing revenue too early","COGS is growing faster than revenue — from rising input costs, pricing pressure, or product mix shift","The company's SG&A expenses are rising faster than revenue","The company is paying more in interest expense"],
+ a:1,
+ e:"Gross Margin = (Revenue − COGS) / Revenue. If it declines while revenue grows, COGS must be outpacing revenue — from rising raw material costs, competitive price pressure, or a shift toward lower-margin products.",
+ oe:["Early revenue recognition would inflate revenue and could improve gross margin — it would not cause gross margin to decline.",
+     "Correct! Declining gross margin with growing revenue means COGS is outpacing revenue — from cost inflation, pricing pressure, or mix shift.",
+     "SG&A affects Operating Margin, not Gross Margin. Gross Margin = Revenue − COGS only.",
+     "Interest Expense is below the operating line — it affects pre-tax income, not Gross Margin."]},
+
+{d:'C',
+ q:"How does accelerated depreciation affect a company's financial statements differently in Year 1 vs. Year 5 of an asset's 10-year life?",
+ o:["The depreciation expense is identical in all years — accelerated only affects cash taxes","Year 1 has higher depreciation expense and lower Net Income than straight-line; by the later years the pattern reverses","Accelerated depreciation only affects the Cash Flow Statement, not the Income Statement","Year 5 has higher depreciation expense than Year 1 under accelerated methods"],
+ a:1,
+ e:"Accelerated methods front-load depreciation — in early years, expense is higher than straight-line, reducing Net Income more. In later years, depreciation falls below straight-line as the asset is mostly written down, reversing the income and deferred tax effect.",
+ oe:["Accelerated depreciation produces different expense amounts each year — it is not uniform. The pattern is high-to-low over the asset's life.",
+     "Correct! Accelerated depreciation is highest in early years and decreases over time — in later years it falls below straight-line, reversing the income and tax effect.",
+     "Depreciation Expense directly affects the Income Statement each period and is added back on the Cash Flow Statement — both statements are affected.",
+     "Under accelerated methods, Year 1 has the HIGHEST depreciation — it decreases each subsequent year, making Year 5 lower than Year 1."]},
+
+{d:'C',
+ q:"What is the difference between Return on Assets (ROA) and Return on Invested Capital (ROIC)?",
+ o:["ROA uses Net Income; ROIC uses Gross Profit as the numerator","ROA measures profit relative to total assets; ROIC measures profit relative to capital deliberately invested by debt and equity holders","ROA and ROIC are the same metric with different names","ROIC is only used by private equity firms, not public company analysts"],
+ a:1,
+ e:"ROA = Net Income ÷ Total Assets — includes all assets, even those funded by non-interest-bearing liabilities. ROIC focuses on capital consciously deployed by investors (equity + interest-bearing debt), making it a purer measure of value creation above the cost of capital.",
+ oe:["Both ROA and ROIC use Net Income or NOPAT in the numerator — neither uses Gross Profit.",
+     "Correct! ROA uses total assets; ROIC uses invested capital (equity + interest-bearing debt), excluding spontaneous financing like AP.",
+     "ROA and ROIC are distinct metrics with different denominators and purposes — ROIC is generally the more precise measure of capital efficiency.",
+     "ROIC is widely used by public company analysts, investors, and management teams — it is not limited to private equity."]},
+
+{d:'C',
+ q:"A company records a large asset impairment charge. How does this affect all three financial statements?",
+ o:["Income Statement: no effect; Balance Sheet: asset decreases; Cash Flow: cash decreases","Income Statement: loss recorded, Net Income decreases; Balance Sheet: asset and equity decrease; Cash Flow: non-cash charge added back in Operating Activities","Income Statement: revenue decreases; Balance Sheet: liability increases; Cash Flow: Investing outflow","All three statements are unaffected because impairment is non-cash"],
+ a:1,
+ e:"Impairment hits all three: (1) Income Statement — recorded as a loss, reducing Net Income; (2) Balance Sheet — reduces the asset and equity (via retained earnings); (3) Cash Flow Statement — added back in Operating Activities as a non-cash charge.",
+ oe:["The Income Statement IS affected — impairment is recorded as an Impairment Loss, reducing Net Income.",
+     "Correct! Impairment reduces the asset and equity (BS), records a loss (IS), and is added back as non-cash on the CFS.",
+     "Impairment does not reduce revenue or increase liabilities — it reduces an asset and records a loss.",
+     "Although impairment is non-cash, it absolutely affects the Income Statement (as a loss) and Balance Sheet (as an asset reduction)."]},
+
+{d:'C',
+ q:"What does the Cash Conversion Cycle (CCC) measure, and what does a shorter CCC generally indicate?",
+ o:["CCC measures total revenue growth rate; a shorter CCC means faster revenue growth","CCC measures the days between paying for inventory and collecting cash from customers; a shorter CCC means faster cash generation","CCC measures how long assets last before replacement; a shorter CCC means faster depreciation","CCC measures debt repayment speed; a shorter CCC means higher leverage"],
+ a:1,
+ e:"CCC = DIO + DSO − DPO. It measures the net days of cash tied up in the operating cycle — from paying for inventory to collecting from customers. A shorter CCC means the company recycles cash faster, requiring less working capital.",
+ oe:["CCC measures working capital efficiency (timing of cash flows), not revenue growth speed.",
+     "Correct! CCC = DIO + DSO − DPO. A shorter CCC means cash is recycled faster through operations, requiring less working capital.",
+     "CCC relates to the cash operating cycle, not asset useful life or depreciation speed.",
+     "CCC measures operational cash timing — it has no direct relationship to the amount of debt or financial leverage."]},
+
+{d:'C',
+ q:"Under accrual accounting, a company delivers services in December but collects cash in January. In which period is revenue recognized, and why?",
+ o:["January — cash has not been received until then","December — the performance obligation was satisfied when the service was delivered","Either period is acceptable under GAAP","The revenue is split equally between December and January"],
+ a:1,
+ e:"Under accrual accounting, revenue is recognized when the performance obligation is satisfied — when the service is delivered. December is when the company earned the revenue by completing the work, regardless of when cash arrives.",
+ oe:["Waiting for cash is the cash-basis method. Accrual accounting requires recognizing revenue when earned, not when cash is collected.",
+     "Correct! December — the service was delivered (performance obligation satisfied), so revenue is recognized in December under accrual accounting.",
+     "GAAP requires accrual accounting for most businesses — recognizing revenue in January for a December delivery would be incorrect.",
+     "Revenue is not split — it is recognized in full in December when the performance obligation is fully and completely satisfied."]},
+
+{d:'C',
+ q:"What distinguishes a contingent liability that must be recorded from one that only requires footnote disclosure?",
+ o:["Size — liabilities over $1 million must be recorded; smaller ones only disclosed","Probability and estimability — probable and estimable must be recorded; reasonably possible or not estimable are only disclosed","All contingent liabilities must be both recorded and disclosed simultaneously","Management has full discretion on whether to record or merely disclose a contingent liability"],
+ a:1,
+ e:"Under US GAAP (ASC 450): if a loss is probable AND can be reasonably estimated, it must be accrued on the Balance Sheet. If only reasonably possible (not probable), or probable but not estimable, it is disclosed in footnotes only. Remote possibilities need no disclosure.",
+ oe:["There is no dollar threshold in GAAP for recording contingent liabilities — the criteria are probability and estimability, not size.",
+     "Correct! Probable + estimable = accrue on Balance Sheet. Reasonably possible = footnote only. Remote = no disclosure needed.",
+     "Not all contingent liabilities are recorded — only those meeting the probable and estimable threshold qualify for Balance Sheet recognition.",
+     "GAAP provides specific criteria (probable and estimable) that determine whether accrual or disclosure is required — management does not have free discretion."]},
+
+{d:'C',
+ q:"A company has high operating leverage. What does this mean for its risk profile as revenue changes?",
+ o:["The company uses a lot of debt financing to fund operations","Fixed costs are high relative to variable costs — small revenue changes produce large swings in operating income","The company's stock price is more volatile than the broader market","High operating leverage always leads to higher long-run profitability"],
+ a:1,
+ e:"Operating leverage measures the proportion of fixed costs in the cost structure. With high fixed costs, a small revenue increase drops disproportionately to operating income (high upside), but a small revenue decline causes a disproportionate drop in operating income (high downside).",
+ oe:["Operating leverage refers to cost structure (fixed vs. variable costs), not financial leverage (debt). High debt describes high financial leverage.",
+     "Correct! High fixed costs = high operating leverage = revenue changes are amplified in operating income, creating higher business risk.",
+     "Beta measures stock price volatility relative to the market — it relates to investor risk perception, not cost structure.",
+     "High operating leverage amplifies profitability when revenue grows but equally amplifies losses when revenue declines — it is not inherently more profitable."]},
+
+{d:'C',
+ q:"What is the difference between the book value of equity and the market value of equity, and why do they typically differ?",
+ o:["They are always equal for publicly traded companies by definition","Book value reflects historical accounting cost; market value reflects investors' expectations of future cash flows, growth, and risk","Book value is always higher because it includes accumulated goodwill from all acquisitions","Market value is always lower because stock markets are generally inefficient"],
+ a:1,
+ e:"Book value (Balance Sheet equity) is based on historical cost accounting — assets minus liabilities at recorded amounts. Market value (market cap) reflects what investors believe the business is worth in the future, incorporating growth expectations, intangible value, competitive position, and risk.",
+ oe:["Book value and market value rarely equal each other for publicly traded companies — they reflect fundamentally different measurement frameworks.",
+     "Correct! Book value = historical accounting cost; market value = investor estimate of future value. Growth prospects and intangibles drive the gap.",
+     "Goodwill is only recorded when an acquisition occurs — many companies have little goodwill. And goodwill is already included in book value when it exists.",
+     "Market value is typically higher than book value for successful companies — investors pay a premium for expected future growth beyond historical cost."]},
+];
+
+// ─── LEVEL DEFINITIONS ────────────────────────────────────────────────────
+// Each level: name, speed (px/frame), bg colors, checkpointQs (indices into QB),
+// and a layout function returning {segs, obs, mplats, totalLen}
+// 
+// Layout uses a coordinate system where y=0 is the floor surface.
+// Obstacles: {type:'s'=floorSpike, 'c'=ceilSpike, 'mp'=movingPlatform}
+// Segs: array of {x, w, type:'f'=floor|'g'=gap}
+// All x values in world pixels (absolute).
+//
+// Design rules verified for each level:
+//   - Max single gap: 115px (reachable with single jump at any speed)
+//   - Max spike run: leaves 40px clearance for landing
+//   - Ceiling spikes: always at least 120px vertical clearance from floor
+//   - Moving platforms: amplitude + base always within jumpable range
+
+const LEVEL_DEFS = [
+
+  // ── LEVEL 0: The Lobby ───────────────────────────────────────────────────
+  // Theme: Tutorial. Flat floor, one easy gap, two lone spikes.
+  // Teaches: jump timing over a gap, spike avoidance.
+  // 1 CP mid-way. Obstacles after CP so player must keep going.
+  {
+    name:"The Lobby", spd:2.2, bg:["#06091a","#0b1228"], cps:[0],
+    layout(W,H,FY){
+      const f=FY, BUF=300;
+      // Section A: flat run → gap → spike
+      const gA=W*.40, gW=80, a1=gA+gW;
+      const sp1=a1+90;
+      const cp1=sp1+120;        // CP after first spike
+      // Section B: BUF clear → double spike → gate
+      const sp2=cp1+BUF, sp3=cp1+BUF+100;
+      return {
+        segs:[{x:0,w:gA,type:'f'},{x:gA,w:gW,type:'g'},{x:a1,w:99999,type:'f'}],
+        obs:[
+          {type:'s',wx:sp1,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp2,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp3,wy:f-22,w:24,h:22},
+        ],
+        mplats:[{wx:gA-50,w:72,base:f-105,amp:28,freq:.9,phase:0}],
+        cpX:[cp1],
+      };
+    }
+  },
+
+  // ── LEVEL 1: Revenue Row ─────────────────────────────────────────────────
+  // Theme: Staircase feel. Two gaps, moving-platform crossing, spike pairs.
+  // Mario World 1-2 vibe: gaps require platform hops.
+  // 1 CP between the two gap zones.
+  {
+    name:"Revenue Row", spd:2.7, bg:["#050e10","#081810"], cps:[1],
+    layout(W,H,FY){
+      const f=FY, BUF=300;
+      // Section A: gap (moving-plat) → spike pair
+      const g1=W*.32, g1w=95, a1=g1+g1w;
+      const sp1=a1+70, sp2=a1+150;
+      const cp1=sp2+120;
+      // Section B: BUF → gap (moving-plat) → triple spike
+      const g2=cp1+BUF, g2w=100, a2=g2+g2w;
+      const sp3=a2+60, sp4=a2+140, sp5=a2+220;
+      return {
+        segs:[
+          {x:0,w:g1,type:'f'},{x:g1,w:g1w,type:'g'},
+          {x:a1,w:g2-a1,type:'f'},{x:g2,w:g2w,type:'g'},
+          {x:a2,w:99999,type:'f'},
+        ],
+        obs:[
+          {type:'s',wx:sp1,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp2,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp3,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp4,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp5,wy:f-22,w:24,h:22},
+        ],
+        mplats:[
+          {wx:g1-50,w:74,base:f-108,amp:32,freq:.9,phase:0},
+          {wx:g2-50,w:74,base:f-108,amp:32,freq:1.0,phase:1},
+        ],
+        cpX:[cp1],
+      };
+    }
+  },
+
+  // ── LEVEL 2: Asset Avenue ────────────────────────────────────────────────
+  // Theme: Alternating rhythm. Spike → gap → spike → gap pattern.
+  // GD "ship mode" inspiration: requires consistent jump timing.
+  // 1 CP at midpoint. Post-CP section mirrors pre-CP but tighter.
+  {
+    name:"Asset Avenue", spd:3.2, bg:["#0e051c","#180830"], cps:[2],
+    layout(W,H,FY){
+      const f=FY, BUF=300;
+      // Section A: spike–gap–spike–gap alternation
+      const sp1=W*.35, g1=sp1+80, g1w=85, a1=g1+g1w;
+      const sp2=a1+60, g2=sp2+80, g2w=85, a2=g2+g2w;
+      const sp3=a2+60;
+      const cp1=sp3+130;
+      // Section B: BUF → tighter alternation (60px gaps, closer spikes)
+      const sp4=cp1+BUF, g3=sp4+70, g3w=90, a3=g3+g3w;
+      const sp5=a3+50, g4=sp5+65, g4w=90, a4=g4+g4w;
+      const sp6=a4+50, sp7=a4+120;
+      return {
+        segs:[
+          {x:0,w:sp1,type:'f'},
+          {x:g1,w:g1w,type:'g'},{x:a1,w:g2-a1,type:'f'},
+          {x:g2,w:g2w,type:'g'},{x:a2,w:g3-a2,type:'f'},
+          {x:g3,w:g3w,type:'g'},{x:a3,w:g4-a3,type:'f'},
+          {x:g4,w:g4w,type:'g'},{x:a4,w:99999,type:'f'},
+        ],
+        obs:[
+          {type:'s',wx:sp1,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp2,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp3,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp4,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp5,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp6,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp7,wy:f-22,w:24,h:22},
+        ],
+        mplats:[
+          {wx:g1-50,w:72,base:f-100,amp:30,freq:1.0,phase:0},
+          {wx:g2-50,w:72,base:f-100,amp:30,freq:1.05,phase:.7},
+          {wx:g3-50,w:70,base:f-100,amp:32,freq:1.1,phase:1.4},
+          {wx:g4-50,w:70,base:f-100,amp:32,freq:1.15,phase:2.1},
+        ],
+        cpX:[cp1],
+      };
+    }
+  },
+
+  // ── LEVEL 3: Liability Lane ──────────────────────────────────────────────
+  // Theme: Wide gaps + spike walls. Mario World 4 cave feel.
+  // Wider gaps demand double-jump. Spike "walls" = two consecutive spikes.
+  // 1 CP after first gauntlet.
+  {
+    name:"Liability Lane", spd:3.7, bg:["#160507","#280b0b"], cps:[3],
+    layout(W,H,FY){
+      const f=FY, BUF=300;
+      // Section A: wide gap → spike wall → gap
+      const g1=W*.35, g1w=105, a1=g1+g1w;
+      const sw1=a1+60, sw2=a1+90;           // spike wall (pair close together)
+      const g2=sw2+100, g2w=95, a2=g2+g2w;
+      const sp1=a2+60;
+      const cp1=sp1+140;
+      // Section B: BUF → spike wall → wide gap → spike wall → spike
+      const sw3=cp1+BUF, sw4=cp1+BUF+36;
+      const g3=sw4+120, g3w=110, a3=g3+g3w;
+      const sw5=a3+55, sw6=a3+91, sp2=a3+160, sp3=a3+230;
+      return {
+        segs:[
+          {x:0,w:g1,type:'f'},{x:g1,w:g1w,type:'g'},
+          {x:a1,w:g2-a1,type:'f'},{x:g2,w:g2w,type:'g'},
+          {x:a2,w:g3-a2,type:'f'},{x:g3,w:g3w,type:'g'},
+          {x:a3,w:99999,type:'f'},
+        ],
+        obs:[
+          {type:'s',wx:sw1,wy:f-22,w:24,h:22},
+          {type:'s',wx:sw2,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp1,wy:f-22,w:24,h:22},
+          {type:'s',wx:sw3,wy:f-22,w:24,h:22},
+          {type:'s',wx:sw4,wy:f-22,w:24,h:22},
+          {type:'s',wx:sw5,wy:f-22,w:24,h:22},
+          {type:'s',wx:sw6,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp2,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp3,wy:f-22,w:24,h:22},
+        ],
+        mplats:[
+          {wx:g1-50,w:74,base:f-108,amp:35,freq:1.0,phase:0},
+          {wx:g2-50,w:74,base:f-108,amp:35,freq:1.05,phase:.8},
+          {wx:g3-50,w:72,base:f-105,amp:38,freq:1.1,phase:1.6},
+        ],
+        cpX:[cp1],
+      };
+    }
+  },
+
+  // ── LEVEL 4: Equity Estates ──────────────────────────────────────────────
+  // Theme: Ceiling spikes debut. GD "UFO mode" vibe: stay low OR stay high.
+  // Floor spikes push you UP, ceiling spikes push you DOWN.
+  // 1 CP. Post-CP section has ceiling-heavy pattern.
+  {
+    name:"Equity Estates", spd:4.1, bg:["#051414","#0a2020"], cps:[4],
+    layout(W,H,FY){
+      const f=FY, BUF=300;
+      // Section A: alternating floor+ceiling
+      const sp1=W*.35, cs1=sp1+50, sp2=cs1+50, cs2=sp2+50, sp3=cs2+60;
+      const g1=sp3+90, g1w=95, a1=g1+g1w;
+      const sp4=a1+60;
+      const cp1=sp4+140;
+      // Section B: BUF → ceiling-dominant corridor → gap → floor-dominant
+      const cs3=cp1+BUF, cs4=cs3+45, cs5=cs4+45, cs6=cs5+45;
+      const g2=cs6+100, g2w=100, a2=g2+g2w;
+      const sp5=a2+50, cs7=a2+90, sp6=a2+140, cs8=a2+185, sp7=a2+235;
+      return {
+        segs:[
+          {x:0,w:g1,type:'f'},{x:g1,w:g1w,type:'g'},
+          {x:a1,w:g2-a1,type:'f'},{x:g2,w:g2w,type:'g'},
+          {x:a2,w:99999,type:'f'},
+        ],
+        obs:[
+          {type:'s',wx:sp1,wy:f-22,w:24,h:22},
+          {type:'c',wx:cs1,wy:HH,  w:22,h:20},
+          {type:'s',wx:sp2,wy:f-22,w:24,h:22},
+          {type:'c',wx:cs2,wy:HH,  w:22,h:20},
+          {type:'s',wx:sp3,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp4,wy:f-22,w:24,h:22},
+          // ceiling run
+          {type:'c',wx:cs3,wy:HH,w:22,h:20},
+          {type:'c',wx:cs4,wy:HH,w:22,h:20},
+          {type:'c',wx:cs5,wy:HH,w:22,h:20},
+          {type:'c',wx:cs6,wy:HH,w:22,h:20},
+          // post-gap alternating
+          {type:'s',wx:sp5,wy:f-22,w:24,h:22},
+          {type:'c',wx:cs7,wy:HH,  w:22,h:20},
+          {type:'s',wx:sp6,wy:f-22,w:24,h:22},
+          {type:'c',wx:cs8,wy:HH,  w:22,h:20},
+          {type:'s',wx:sp7,wy:f-22,w:24,h:22},
+        ],
+        mplats:[
+          {wx:g1-50,w:72,base:f-105,amp:30,freq:1.0,phase:0},
+          {wx:g2-50,w:72,base:f-105,amp:30,freq:1.1,phase:.9},
+        ],
+        cpX:[cp1],
+      };
+    }
+  },
+
+  // ── LEVEL 5: Cash Flow Canyon ────────────────────────────────────────────
+  // Theme: Canyon run. Sawmill + gaps. 2 CPs at ~33% and ~66%.
+  // SAFE START: first obstacle no earlier than W*0.35.
+  // EXTENDED: 3 full obstacle sections per CP zone, longer saws, more gaps.
+  {
+    name:"Cash Flow Canyon", spd:4.6, bg:["#160c04","#261604"], cps:[5,6],
+    layout(W,H,FY){
+      const f=FY, BUF=300, SAFE=Math.floor(W*0.38);
+      function saw(x,n){
+        return Array.from({length:n},(_,i)=>
+          i%2===0 ? {type:'s',wx:x+i*36,wy:f-22,w:24,h:22}
+                  : {type:'c',wx:x+i*36,wy:HH,  w:22,h:20});
+      }
+      // ── Zone A (before CP1) ──────────────────────────────
+      // safe run → spike pair → saw(4) → gap → saw(3) → spike → gap → saw(4)
+      const sp1=SAFE, sp2=SAFE+90;
+      const saw1=sp2+80, n1=4, end1=saw1+n1*36;
+      const g1=end1+55, g1w=90, a1=g1+g1w;
+      const saw2=a1+40, n2=3, end2=saw2+n2*36;
+      const sp3=end2+60;
+      const g2=sp3+90, g2w=95, a2=g2+g2w;
+      const saw3=a2+40, n3=4, end3=saw3+n3*36;
+      const cp1=end3+130;
+      // ── Zone B (CP1 → CP2) ──────────────────────────────
+      // BUF → saw(6) → gap → spike wall → saw(5) → gap → saw(4) → spike pair
+      const saw4=cp1+BUF, n4=6, end4=saw4+n4*36;
+      const g3=end4+55, g3w=100, a3=g3+g3w;
+      const sw1=a3+55, sw2=sw1+36;
+      const saw5=sw2+80, n5=5, end5=saw5+n5*36;
+      const g4=end5+55, g4w=95, a4=g4+g4w;
+      const saw6=a4+40, n6=4, end6=saw6+n6*36;
+      const sp4=end6+80, sp5=end6+180;
+      const cp2=sp5+130;
+      // ── Zone C (after CP2) ──────────────────────────────
+      // BUF → saw(7) → gap → spike wall+ceil → saw(6) → gap → saw(5) → spike pair
+      const saw7=cp2+BUF, n7=7, end7=saw7+n7*36;
+      const g5=end7+55, g5w=100, a5=g5+g5w;
+      const sw3=a5+55, sw4=sw3+36;
+      const cs1=sw4+70, cs2=cs1+44;
+      const saw8=cs2+60, n8=6, end8=saw8+n8*36;
+      const g6=end8+55, g6w=100, a6=g6+g6w;
+      const saw9=a6+40, n9=5, end9=saw9+n9*36;
+      const sp6=end9+80, sp7=end9+180;
+      return {
+        segs:[
+          {x:0,w:g1,type:'f'},{x:g1,w:g1w,type:'g'},
+          {x:a1,w:g2-a1,type:'f'},{x:g2,w:g2w,type:'g'},
+          {x:a2,w:g3-a2,type:'f'},{x:g3,w:g3w,type:'g'},
+          {x:a3,w:g4-a3,type:'f'},{x:g4,w:g4w,type:'g'},
+          {x:a4,w:g5-a4,type:'f'},{x:g5,w:g5w,type:'g'},
+          {x:a5,w:g6-a5,type:'f'},{x:g6,w:g6w,type:'g'},
+          {x:a6,w:99999,type:'f'},
+        ],
+        obs:[
+          {type:'s',wx:sp1,wy:f-22,w:24,h:22},{type:'s',wx:sp2,wy:f-22,w:24,h:22},
+          ...saw(saw1,n1),...saw(saw2,n2),
+          {type:'s',wx:sp3,wy:f-22,w:24,h:22},
+          ...saw(saw3,n3),
+          ...saw(saw4,n4),
+          {type:'s',wx:sw1,wy:f-22,w:24,h:22},{type:'s',wx:sw2,wy:f-22,w:24,h:22},
+          ...saw(saw5,n5),...saw(saw6,n6),
+          {type:'s',wx:sp4,wy:f-22,w:24,h:22},{type:'s',wx:sp5,wy:f-22,w:24,h:22},
+          ...saw(saw7,n7),
+          {type:'s',wx:sw3,wy:f-22,w:24,h:22},{type:'s',wx:sw4,wy:f-22,w:24,h:22},
+          {type:'c',wx:cs1,wy:HH,w:22,h:20},{type:'c',wx:cs2,wy:HH,w:22,h:20},
+          ...saw(saw8,n8),...saw(saw9,n9),
+          {type:'s',wx:sp6,wy:f-22,w:24,h:22},{type:'s',wx:sp7,wy:f-22,w:24,h:22},
+        ],
+        mplats:[
+          {wx:g1-50,w:74,base:f-105,amp:30,freq:1.0,phase:0},
+          {wx:g2-50,w:74,base:f-105,amp:30,freq:1.1,phase:.5},
+          {wx:g3-50,w:72,base:f-100,amp:32,freq:1.15,phase:1.0},
+          {wx:g4-50,w:72,base:f-100,amp:32,freq:1.2,phase:1.5},
+          {wx:g5-50,w:70,base:f-100,amp:34,freq:1.2,phase:2.0},
+          {wx:g6-50,w:70,base:f-100,amp:34,freq:1.3,phase:2.5},
+        ],
+        cpX:[cp1,cp2],
+      };
+    }
+  },
+
+  // ── LEVEL 6: Balance Bridge ──────────────────────────────────────────────
+  // Theme: Platform gauntlet. 2 CPs. SAFE START: W*0.38.
+  // EXTENDED: 4 gap sections per zone, tighter gaps, more ceiling spikes.
+  {
+    name:"Balance Bridge", spd:5.1, bg:["#040d18","#06162a"], cps:[7,8],
+    layout(W,H,FY){
+      const f=FY, BUF=300, SAFE=Math.floor(W*0.38);
+      function saw(x,n){
+        return Array.from({length:n},(_,i)=>
+          i%2===0 ? {type:'s',wx:x+i*36,wy:f-22,w:24,h:22}
+                  : {type:'c',wx:x+i*36,wy:HH,  w:22,h:20});
+      }
+      // ── Zone A ──────────────────────────────────────────
+      // safe → spike pair+ceil → gap → alt(4) → gap → saw(3) → gap → spike wall+ceil pair
+      const sp1=SAFE, cs1=SAFE+60, sp2=SAFE+110;
+      const g1=sp2+100, g1w=108, a1=g1+g1w;
+      const saw1=a1+40, n1=4, end1=saw1+n1*36;
+      const g2=end1+55, g2w=110, a2=g2+g2w;
+      const saw2=a2+40, n2=3, end2=saw2+n2*36;
+      const g3=end2+55, g3w=105, a3=g3+g3w;
+      const sw1=a3+55, sw2=sw1+36, cs2=a3+100, cs3=a3+148;
+      const cp1x=cs3+130; // CP1 placed 130px after last obstacle in Zone A
+      // ── Zone B ──────────────────────────────────────────
+      // BUF → ceiling run(5) → gap → saw(5) → gap → spike wall → gap → alt(5) → spike pair
+      const cs4=cp1x+BUF, cs5=cs4+44, cs6=cs5+44, cs7=cs6+44, cs8=cs7+44;
+      const g4=cs8+90, g4w=110, a4=g4+g4w;
+      const saw3=a4+40, n3=5, end3=saw3+n3*36;
+      const g5=end3+55, g5w=108, a5=g5+g5w;
+      const sw3=a5+55, sw4=sw3+36;
+      const g6=sw4+110, g6w=110, a6=g6+g6w;
+      const saw4=a6+40, n4=5, end4=saw4+n4*36;
+      const sp3=end4+80, sp4=end4+190;
+      const cp2=sp4+130;
+      // ── Zone C ──────────────────────────────────────────
+      // BUF → 4 consecutive platform gaps → saw(6) → gap → saw(5) → ceil rain(4) → spike pair
+      const g7=cp2+BUF, g7w=112, a7=g7+g7w;
+      const g8=a7+75, g8w=112, a8=g8+g8w;
+      const g9=a8+75, g9w=110, a9=g9+g9w;
+      const g10=a9+75, g10w=108, a10=g10+g10w;
+      const saw5=a10+40, n5=6, end5=saw5+n5*36;
+      const g11=end5+55, g11w=105, a11=g11+g11w;
+      const saw6=a11+40, n6=5, end6=saw6+n6*36;
+      const cs9=end6+60, cs10=cs9+44, cs11=cs10+44, cs12=cs11+44;
+      const sp5=cs12+80, sp6=cs12+190;
+      return {
+        segs:[
+          {x:0,w:g1,type:'f'},{x:g1,w:g1w,type:'g'},
+          {x:a1,w:g2-a1,type:'f'},{x:g2,w:g2w,type:'g'},
+          {x:a2,w:g3-a2,type:'f'},{x:g3,w:g3w,type:'g'},
+          {x:a3,w:g4-a3,type:'f'},{x:g4,w:g4w,type:'g'},
+          {x:a4,w:g5-a4,type:'f'},{x:g5,w:g5w,type:'g'},
+          {x:a5,w:g6-a5,type:'f'},{x:g6,w:g6w,type:'g'},
+          {x:a6,w:g7-a6,type:'f'},{x:g7,w:g7w,type:'g'},
+          {x:a7,w:g8-a7,type:'f'},{x:g8,w:g8w,type:'g'},
+          {x:a8,w:g9-a8,type:'f'},{x:g9,w:g9w,type:'g'},
+          {x:a9,w:g10-a9,type:'f'},{x:g10,w:g10w,type:'g'},
+          {x:a10,w:g11-a10,type:'f'},{x:g11,w:g11w,type:'g'},
+          {x:a11,w:99999,type:'f'},
+        ],
+        obs:[
+          {type:'s',wx:sp1,wy:f-22,w:24,h:22},{type:'c',wx:cs1,wy:HH,w:22,h:20},
+          {type:'s',wx:sp2,wy:f-22,w:24,h:22},
+          ...saw(saw1,n1),...saw(saw2,n2),
+          {type:'s',wx:sw1,wy:f-22,w:24,h:22},{type:'s',wx:sw2,wy:f-22,w:24,h:22},
+          {type:'c',wx:cs2,wy:HH,w:22,h:20},{type:'c',wx:cs3,wy:HH,w:22,h:20},
+          {type:'c',wx:cs4,wy:HH,w:22,h:20},{type:'c',wx:cs5,wy:HH,w:22,h:20},
+          {type:'c',wx:cs6,wy:HH,w:22,h:20},{type:'c',wx:cs7,wy:HH,w:22,h:20},
+          {type:'c',wx:cs8,wy:HH,w:22,h:20},
+          ...saw(saw3,n3),
+          {type:'s',wx:sw3,wy:f-22,w:24,h:22},{type:'s',wx:sw4,wy:f-22,w:24,h:22},
+          ...saw(saw4,n4),
+          {type:'s',wx:sp3,wy:f-22,w:24,h:22},{type:'s',wx:sp4,wy:f-22,w:24,h:22},
+          ...saw(saw5,n5),...saw(saw6,n6),
+          {type:'c',wx:cs9,wy:HH,w:22,h:20},{type:'c',wx:cs10,wy:HH,w:22,h:20},
+          {type:'c',wx:cs11,wy:HH,w:22,h:20},{type:'c',wx:cs12,wy:HH,w:22,h:20},
+          {type:'s',wx:sp5,wy:f-22,w:24,h:22},{type:'s',wx:sp6,wy:f-22,w:24,h:22},
+        ],
+        mplats:[
+          {wx:g1-50,w:72,base:f-105,amp:30,freq:1.0,phase:0},
+          {wx:g2-50,w:72,base:f-100,amp:32,freq:1.1,phase:.6},
+          {wx:g3-50,w:70,base:f-100,amp:32,freq:1.15,phase:1.2},
+          {wx:g4-50,w:70,base:f-105,amp:30,freq:1.2,phase:1.8},
+          {wx:g5-50,w:68,base:f-100,amp:34,freq:1.2,phase:2.4},
+          {wx:g6-50,w:68,base:f-100,amp:34,freq:1.3,phase:3.0},
+          {wx:g7-50,w:66,base:f-105,amp:32,freq:1.3,phase:0.3},
+          {wx:g8-50,w:66,base:f-100,amp:34,freq:1.35,phase:0.9},
+          {wx:g9-50,w:64,base:f-100,amp:36,freq:1.4,phase:1.5},
+          {wx:g10-50,w:64,base:f-105,amp:34,freq:1.45,phase:2.1},
+          {wx:g11-50,w:62,base:f-100,amp:36,freq:1.5,phase:2.7},
+        ],
+        cpX:[cp1x, cp2],
+      };
+    }
+  },
+
+  // ── LEVEL 7: Depreciation Dune ───────────────────────────────────────────
+  // Theme: Desert grind. 2 CPs. SAFE START W*0.38.
+  // EXTENDED: Much longer saws (10-12 teeth), more sections, double gaps.
+  {
+    name:"Depreciation Dune", spd:5.7, bg:["#100f03","#1c1b05"], cps:[9,10],
+    layout(W,H,FY){
+      const f=FY, BUF=300, SAFE=Math.floor(W*0.38);
+      function saw(x,n){
+        return Array.from({length:n},(_,i)=>
+          i%2===0 ? {type:'s',wx:x+i*36,wy:f-22,w:24,h:22}
+                  : {type:'c',wx:x+i*36,wy:HH,  w:22,h:20});
+      }
+      // ── Zone A ──────────────────────────────────────────
+      // safe → spike → saw(5) → gap → saw(4) → gap → long saw(8) → gap → spike
+      const sp1=SAFE;
+      const saw1=sp1+80, n1=5, end1=saw1+n1*36;
+      const g1=end1+55, g1w=100, a1=g1+g1w;
+      const saw2=a1+40, n2=4, end2=saw2+n2*36;
+      const g2=end2+55, g2w=105, a2=g2+g2w;
+      const saw3=a2+40, n3=8, end3=saw3+n3*36;
+      const g3=end3+55, g3w=100, a3=g3+g3w;
+      const sp2=a3+60;
+      const cp1=sp2+130;
+      // ── Zone B ──────────────────────────────────────────
+      // BUF → very long saw(12) → gap → saw(6) → gap → saw(8) → gap → spike wall → saw(6)
+      const saw4=cp1+BUF, n4=12, end4=saw4+n4*36;
+      const g4=end4+55, g4w=105, a4=g4+g4w;
+      const saw5=a4+40, n5=6, end5=saw5+n5*36;
+      const g5=end5+55, g5w=108, a5=g5+g5w;
+      const saw6=a5+40, n6=8, end6=saw6+n6*36;
+      const g6=end6+55, g6w=105, a6=g6+g6w;
+      const sw1=a6+55, sw2=sw1+36;
+      const saw7=sw2+80, n7=6, end7=saw7+n7*36;
+      const sp3=end7+60;
+      const cp2=sp3+130;
+      // ── Zone C ──────────────────────────────────────────
+      // BUF → spike wall+ceil → long saw(10) → gap → saw(6) → double gap → saw(8) → spike pair
+      const sw3=cp2+BUF, sw4=sw3+36;
+      const cs1=sw4+70, cs2=cs1+44, cs3=cs2+44;
+      const saw8=cs3+60, n8=10, end8=saw8+n8*36;
+      const g7=end8+55, g7w=105, a7=g7+g7w;
+      const saw9=a7+40, n9=6, end9=saw9+n9*36;
+      const g8=end9+55, g8w=108, a8=g8+g8w;
+      const g9=a8+60, g9w=100, a9=g9+g9w;
+      const saw10=a9+40, n10=8, end10=saw10+n10*36;
+      const sp4=end10+80, sp5=end10+190;
+      return {
+        segs:[
+          {x:0,w:g1,type:'f'},{x:g1,w:g1w,type:'g'},
+          {x:a1,w:g2-a1,type:'f'},{x:g2,w:g2w,type:'g'},
+          {x:a2,w:g3-a2,type:'f'},{x:g3,w:g3w,type:'g'},
+          {x:a3,w:g4-a3,type:'f'},{x:g4,w:g4w,type:'g'},
+          {x:a4,w:g5-a4,type:'f'},{x:g5,w:g5w,type:'g'},
+          {x:a5,w:g6-a5,type:'f'},{x:g6,w:g6w,type:'g'},
+          {x:a6,w:g7-a6,type:'f'},{x:g7,w:g7w,type:'g'},
+          {x:a7,w:g8-a7,type:'f'},{x:g8,w:g8w,type:'g'},
+          {x:a8,w:g9-a8,type:'f'},{x:g9,w:g9w,type:'g'},
+          {x:a9,w:99999,type:'f'},
+        ],
+        obs:[
+          {type:'s',wx:sp1,wy:f-22,w:24,h:22},
+          ...saw(saw1,n1),...saw(saw2,n2),...saw(saw3,n3),
+          {type:'s',wx:sp2,wy:f-22,w:24,h:22},
+          ...saw(saw4,n4),...saw(saw5,n5),...saw(saw6,n6),
+          {type:'s',wx:sw1,wy:f-22,w:24,h:22},{type:'s',wx:sw2,wy:f-22,w:24,h:22},
+          ...saw(saw7,n7),{type:'s',wx:sp3,wy:f-22,w:24,h:22},
+          {type:'s',wx:sw3,wy:f-22,w:24,h:22},{type:'s',wx:sw4,wy:f-22,w:24,h:22},
+          {type:'c',wx:cs1,wy:HH,w:22,h:20},{type:'c',wx:cs2,wy:HH,w:22,h:20},
+          {type:'c',wx:cs3,wy:HH,w:22,h:20},
+          ...saw(saw8,n8),...saw(saw9,n9),...saw(saw10,n10),
+          {type:'s',wx:sp4,wy:f-22,w:24,h:22},{type:'s',wx:sp5,wy:f-22,w:24,h:22},
+        ],
+        mplats:[
+          {wx:g1-50,w:74,base:f-105,amp:32,freq:1.1,phase:0},
+          {wx:g2-50,w:72,base:f-100,amp:34,freq:1.2,phase:.5},
+          {wx:g3-50,w:72,base:f-100,amp:34,freq:1.2,phase:1.0},
+          {wx:g4-50,w:70,base:f-100,amp:36,freq:1.25,phase:1.5},
+          {wx:g5-50,w:70,base:f-100,amp:36,freq:1.3,phase:2.0},
+          {wx:g6-50,w:68,base:f-105,amp:34,freq:1.3,phase:2.5},
+          {wx:g7-50,w:68,base:f-100,amp:36,freq:1.35,phase:0.2},
+          {wx:g8-50,w:66,base:f-100,amp:38,freq:1.4,phase:0.8},
+          {wx:g9-50,w:66,base:f-100,amp:38,freq:1.45,phase:1.4},
+        ],
+        // Spike balls: slow oscillators on floor sections, player must time gap between spikes
+        sballs:[
+          {wx:saw5+n5*36*0.5, r:18, base:f-88, amp:68, freq:1.0, phase:0},
+          {wx:saw7+n7*36*0.5, r:18, base:f-88, amp:72, freq:1.1, phase:1.3},
+          {wx:saw9+n9*36*0.5, r:18, base:f-85, amp:70, freq:0.95, phase:2.6},
+        ],
+        cpX:[cp1,cp2],
+      };
+    }
+  },
+
+  // ── LEVEL 8: Ratio Ridge ─────────────────────────────────────────────────
+  // Theme: Precision. 4 CPs. SAFE START W*0.38.
+  // EXTENDED: 5 distinct zones, each much longer. Tighter sawmills (28px spacing).
+  {
+    name:"Ratio Ridge", spd:6.2, bg:["#040818","#080e32"], cps:[11,12,13,14],
+    layout(W,H,FY){
+      const f=FY, BUF=300, SAFE=Math.floor(W*0.38);
+      function saw(x,n,gap){  // gap defaults to 36px
+        const g=gap||36;
+        return Array.from({length:n},(_,i)=>
+          i%2===0 ? {type:'s',wx:x+i*g,wy:f-22,w:24,h:22}
+                  : {type:'c',wx:x+i*g,wy:HH,  w:22,h:20});
+      }
+      // Zone A: safe → spike+ceil alternation → double gap → saw(6) → gap → spike wall → saw(4)
+      const sp1=SAFE, cs1=SAFE+70, sp2=SAFE+140, cs2=SAFE+210;
+      const g1=SAFE+300, g1w=105, a1=g1+g1w;
+      const g2=a1+60, g2w=100, a2=g2+g2w;
+      const saw1=a2+40, n1=6, end1=saw1+n1*36;
+      const g3=end1+55, g3w=105, a3=g3+g3w;
+      const sw1=a3+55, sw2=sw1+36;
+      const saw2=sw2+80, n2=4, end2=saw2+n2*36;
+      const sp3=end2+60;
+      const cp1=sp3+130;
+      // Zone B: BUF → ceiling rain(6) → gap → tight saw(8,28px) → gap → saw(6) → spike wall → gap
+      const cs3=cp1+BUF, cs4=cs3+44, cs5=cs4+44, cs6=cs5+44, cs7=cs6+44, cs8=cs7+44;
+      const g4=cs8+90, g4w=108, a4=g4+g4w;
+      const saw3=a4+40, n3=8, end3=saw3+n3*28;  // tighter 28px spacing
+      const g5=end3+55, g5w=108, a5=g5+g5w;
+      const saw4=a5+40, n4=6, end4=saw4+n4*36;
+      const sw3=end4+60, sw4=sw3+36;
+      const cs9=sw4+80, cs10=cs9+44, cs11=cs10+44;
+      const g6=cs11+90, g6w=105, a6=g6+g6w;
+      const sp4=a6+60, sp5=a6+140;
+      const cp2=sp5+130;
+      // Zone C: BUF → long saw(12) → gap → very tight saw(10,26px) → gap → saw(8) → gap → spike pair
+      const saw5=cp2+BUF, n5=12, end5=saw5+n5*36;
+      const g7=end5+55, g7w=110, a7=g7+g7w;
+      const saw6=a7+40, n6=10, end6=saw6+n6*26;  // very tight 26px
+      const g8=end6+55, g8w=108, a8=g8+g8w;
+      const saw7=a8+40, n7=8, end7=saw7+n7*36;
+      const g9=end7+55, g9w=105, a9=g9+g9w;
+      const sp6=a9+60, sp7=a9+140;
+      const cp3=sp7+130;
+      // Zone D: BUF → spike wall+ceil burst → saw(10) → gap → tight saw(8,28px) → gap → ceil rain(5) → saw(6)
+      const sw5=cp3+BUF, sw6=sw5+36;
+      const cs12=sw6+70, cs13=cs12+44, cs14=cs13+44, cs15=cs14+44;
+      const saw8=cs15+60, n8=10, end8=saw8+n8*36;
+      const g10=end8+55, g10w=110, a10=g10+g10w;
+      const saw9=a10+40, n9=8, end9=saw9+n9*28;
+      const g11=end9+55, g11w=108, a11=g11+g11w;
+      const cs16=a11+50, cs17=cs16+44, cs18=cs17+44, cs19=cs18+44, cs20=cs19+44;
+      const saw10=cs20+60, n10=6, end10=saw10+n10*36;
+      const sp8=end10+60, sp9=end10+140;
+      const cp4=sp9+130;
+      // Zone E: BUF → chaos (everything) → very long tight saw(14,26px) → gap → ceiling burst → spike wall → saw(8)
+      const saw11=cp4+BUF, n11=14, end11=saw11+n11*26;
+      const g12=end11+55, g12w=110, a12=g12+g12w;
+      const cs21=a12+50, cs22=cs21+44, cs23=cs22+44, cs24=cs23+44, cs25=cs24+44, cs26=cs25+44;
+      const sw7=cs26+80, sw8=sw7+36;
+      const saw12=sw8+80, n12=8, end12=saw12+n12*36;
+      const sp10=end12+60, sp11=end12+150;
+      return {
+        segs:[
+          {x:0,w:g1,type:'f'},{x:g1,w:g1w,type:'g'},
+          {x:a1,w:g2-a1,type:'f'},{x:g2,w:g2w,type:'g'},
+          {x:a2,w:g3-a2,type:'f'},{x:g3,w:g3w,type:'g'},
+          {x:a3,w:g4-a3,type:'f'},{x:g4,w:g4w,type:'g'},
+          {x:a4,w:g5-a4,type:'f'},{x:g5,w:g5w,type:'g'},
+          {x:a5,w:g6-a5,type:'f'},{x:g6,w:g6w,type:'g'},
+          {x:a6,w:g7-a6,type:'f'},{x:g7,w:g7w,type:'g'},
+          {x:a7,w:g8-a7,type:'f'},{x:g8,w:g8w,type:'g'},
+          {x:a8,w:g9-a8,type:'f'},{x:g9,w:g9w,type:'g'},
+          {x:a9,w:g10-a9,type:'f'},{x:g10,w:g10w,type:'g'},
+          {x:a10,w:g11-a10,type:'f'},{x:g11,w:g11w,type:'g'},
+          {x:a11,w:g12-a11,type:'f'},{x:g12,w:g12w,type:'g'},
+          {x:a12,w:99999,type:'f'},
+        ],
+        obs:[
+          {type:'s',wx:sp1,wy:f-22,w:24,h:22},{type:'c',wx:cs1,wy:HH,w:22,h:20},
+          {type:'s',wx:sp2,wy:f-22,w:24,h:22},{type:'c',wx:cs2,wy:HH,w:22,h:20},
+          ...saw(saw1,n1),...saw(saw2,n2),
+          {type:'s',wx:sw1,wy:f-22,w:24,h:22},{type:'s',wx:sw2,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp3,wy:f-22,w:24,h:22},
+          {type:'c',wx:cs3,wy:HH,w:22,h:20},{type:'c',wx:cs4,wy:HH,w:22,h:20},
+          {type:'c',wx:cs5,wy:HH,w:22,h:20},{type:'c',wx:cs6,wy:HH,w:22,h:20},
+          {type:'c',wx:cs7,wy:HH,w:22,h:20},{type:'c',wx:cs8,wy:HH,w:22,h:20},
+          ...saw(saw3,n3,28),...saw(saw4,n4),
+          {type:'s',wx:sw3,wy:f-22,w:24,h:22},{type:'s',wx:sw4,wy:f-22,w:24,h:22},
+          {type:'c',wx:cs9,wy:HH,w:22,h:20},{type:'c',wx:cs10,wy:HH,w:22,h:20},
+          {type:'c',wx:cs11,wy:HH,w:22,h:20},
+          {type:'s',wx:sp4,wy:f-22,w:24,h:22},{type:'s',wx:sp5,wy:f-22,w:24,h:22},
+          ...saw(saw5,n5),...saw(saw6,n6,26),...saw(saw7,n7),
+          {type:'s',wx:sp6,wy:f-22,w:24,h:22},{type:'s',wx:sp7,wy:f-22,w:24,h:22},
+          {type:'s',wx:sw5,wy:f-22,w:24,h:22},{type:'s',wx:sw6,wy:f-22,w:24,h:22},
+          {type:'c',wx:cs12,wy:HH,w:22,h:20},{type:'c',wx:cs13,wy:HH,w:22,h:20},
+          {type:'c',wx:cs14,wy:HH,w:22,h:20},{type:'c',wx:cs15,wy:HH,w:22,h:20},
+          ...saw(saw8,n8),...saw(saw9,n9,28),
+          {type:'c',wx:cs16,wy:HH,w:22,h:20},{type:'c',wx:cs17,wy:HH,w:22,h:20},
+          {type:'c',wx:cs18,wy:HH,w:22,h:20},{type:'c',wx:cs19,wy:HH,w:22,h:20},
+          {type:'c',wx:cs20,wy:HH,w:22,h:20},
+          ...saw(saw10,n10),
+          {type:'s',wx:sp8,wy:f-22,w:24,h:22},{type:'s',wx:sp9,wy:f-22,w:24,h:22},
+          ...saw(saw11,n11,26),
+          {type:'c',wx:cs21,wy:HH,w:22,h:20},{type:'c',wx:cs22,wy:HH,w:22,h:20},
+          {type:'c',wx:cs23,wy:HH,w:22,h:20},{type:'c',wx:cs24,wy:HH,w:22,h:20},
+          {type:'c',wx:cs25,wy:HH,w:22,h:20},{type:'c',wx:cs26,wy:HH,w:22,h:20},
+          {type:'s',wx:sw7,wy:f-22,w:24,h:22},{type:'s',wx:sw8,wy:f-22,w:24,h:22},
+          ...saw(saw12,n12),
+          {type:'s',wx:sp10,wy:f-22,w:24,h:22},{type:'s',wx:sp11,wy:f-22,w:24,h:22},
+        ],
+        mplats:[
+          {wx:g1-50,w:72,base:f-105,amp:28,freq:1.1,phase:0},
+          {wx:g2-50,w:70,base:f-100,amp:30,freq:1.2,phase:.5},
+          {wx:g3-50,w:70,base:f-100,amp:30,freq:1.2,phase:1.0},
+          {wx:g4-50,w:68,base:f-105,amp:28,freq:1.3,phase:1.5},
+          {wx:g5-50,w:68,base:f-100,amp:32,freq:1.2,phase:2.0},
+          {wx:g6-50,w:66,base:f-100,amp:32,freq:1.35,phase:2.5},
+          {wx:g7-50,w:66,base:f-100,amp:34,freq:1.3,phase:0.3},
+          {wx:g8-50,w:64,base:f-105,amp:32,freq:1.4,phase:0.8},
+          {wx:g9-50,w:64,base:f-100,amp:34,freq:1.35,phase:1.4},
+          {wx:g10-50,w:62,base:f-100,amp:36,freq:1.4,phase:2.0},
+          {wx:g11-50,w:62,base:f-100,amp:36,freq:1.45,phase:2.6},
+          {wx:g12-50,w:60,base:f-100,amp:38,freq:1.5,phase:3.2},
+        ],
+        // Spike balls: one per zone, placed mid-sawmill section
+        sballs:[
+          {wx:saw2+n2*36*0.5,  r:18, base:f-88, amp:70, freq:1.1, phase:0},
+          {wx:saw5+n5*36*0.5,  r:18, base:f-88, amp:74, freq:1.2, phase:0.8},
+          {wx:saw8+n8*36*0.5,  r:20, base:f-85, amp:76, freq:1.15,phase:1.6},
+          {wx:saw10+n10*36*0.5,r:18, base:f-88, amp:72, freq:1.3, phase:2.4},
+          {wx:saw12+n12*36*0.5,r:20, base:f-82, amp:78, freq:1.25,phase:3.2},
+        ],
+        cpX:[cp1,cp2,cp3,cp4],
+      };
+    }
+  },
+
+  // ── LEVEL 9: Statement Summit ────────────────────────────────────────────
+  // Theme: Everything. Max speed. 4 CPs. SAFE START W*0.38.
+  // EXTENDED: Massive level. Each zone is its own long gauntlet.
+  // Tightest saws (24px), most gaps, most ceiling density.
+  {
+    name:"Statement Summit", spd:7.0, bg:["#08040e","#140624"], cps:[15,16,17,18],
+    layout(W,H,FY){
+      const f=FY, BUF=300, SAFE=Math.floor(W*0.38);
+      function saw(x,n,gap){
+        const g=gap||36;
+        return Array.from({length:n},(_,i)=>
+          i%2===0 ? {type:'s',wx:x+i*g,wy:f-22,w:24,h:22}
+                  : {type:'c',wx:x+i*g,wy:HH,  w:22,h:20});
+      }
+      // Zone A: safe → spike pair → saw(6) → gap → saw(5) → gap → ceiling burst(5) → saw(6,28px) → gap → spike wall
+      const sp1=SAFE, sp2=SAFE+100;
+      const saw1=sp2+80, n1=6, end1=saw1+n1*36;
+      const g1=end1+55, g1w=100, a1=g1+g1w;
+      const saw2=a1+40, n2=5, end2=saw2+n2*36;
+      const g2=end2+55, g2w=105, a2=g2+g2w;
+      const cs1=a2+50, cs2=cs1+44, cs3=cs2+44, cs4=cs3+44, cs5=cs4+44;
+      const saw3=cs5+60, n3=6, end3=saw3+n3*28;
+      const g3=end3+55, g3w=105, a3=g3+g3w;
+      const sw1=a3+55, sw2=sw1+36, sp3=a3+130;
+      const cp1=sp3+130;
+      // Zone B: BUF → long saw(12) → gap → ceiling rain(7) → spike → saw(8,28px) → gap → tight saw(10,24px) → gap → spike wall+ceil
+      const saw4=cp1+BUF, n4=12, end4=saw4+n4*36;
+      const g4=end4+55, g4w=108, a4=g4+g4w;
+      const cs6=a4+50,cs7=cs6+44,cs8=cs7+44,cs9=cs8+44,cs10=cs9+44,cs11=cs10+44,cs12=cs11+44;
+      const sp4=cs12+60;
+      const saw5=sp4+80, n5=8, end5=saw5+n5*28;
+      const g5=end5+55, g5w=108, a5=g5+g5w;
+      const saw6=a5+40, n6=10, end6=saw6+n6*24;
+      const g6=end6+55, g6w=110, a6=g6+g6w;
+      const sw3=a6+55, sw4=sw3+36;
+      const cs13=sw4+70, cs14=cs13+44, cs15=cs14+44;
+      const sp5=cs15+80, sp6=cs15+160;
+      const cp2=sp6+130;
+      // Zone C: BUF → very tight saw(14,24px) → gap → saw(10) → gap → ceiling burst(6) → saw(8,26px) → gap → triple spike wall
+      const saw7=cp2+BUF, n7=14, end7=saw7+n7*24;
+      const g7=end7+55, g7w=110, a7=g7+g7w;
+      const saw8=a7+40, n8=10, end8=saw8+n8*36;
+      const g8=end8+55, g8w=108, a8=g8+g8w;
+      const cs16=a8+50,cs17=cs16+44,cs18=cs17+44,cs19=cs18+44,cs20=cs19+44,cs21=cs20+44;
+      const saw9=cs21+60, n9=8, end9=saw9+n9*26;
+      const g9=end9+55, g9w=108, a9=g9+g9w;
+      const sw5=a9+55, sw6=sw5+36, sw7=sw6+36;  // triple spike wall
+      const cs22=sw7+70, cs23=cs22+44;
+      const sp7=cs23+80, sp8=cs23+160;
+      const cp3=sp8+130;
+      // Zone D: BUF → everything mixed → long tight saw(16,24px) → gap → ceiling burst(8) → saw(10,26px) → gap → spike wall+ceil × 2
+      const saw10=cp3+BUF, n10=16, end10=saw10+n10*24;
+      const g10=end10+55, g10w=110, a10=g10+g10w;
+      const cs24=a10+50,cs25=cs24+44,cs26=cs25+44,cs27=cs26+44,cs28=cs27+44,cs29=cs28+44,cs30=cs29+44,cs31=cs30+44;
+      const saw11=cs31+60, n11=10, end11=saw11+n11*26;
+      const g11=end11+55, g11w=110, a11=g11+g11w;
+      const sw8=a11+55, sw9=sw8+36;
+      const cs32=sw9+70, cs33=cs32+44, cs34=cs33+44;
+      const sw10=cs34+80, sw11=sw10+36;
+      const cs35=sw11+70, cs36=cs35+44, cs37=cs36+44;
+      const sp9=cs37+80, sp10=cs37+160;
+      const cp4=sp10+130;
+      // Zone E: BUF → absolute chaos gauntlet
+      const saw12=cp4+BUF, n12=18, end12=saw12+n12*24;
+      const g12=end12+55, g12w=112, a12=g12+g12w;
+      const cs38=a12+40,cs39=cs38+44,cs40=cs39+44,cs41=cs40+44,cs42=cs41+44,cs43=cs42+44,cs44=cs43+44,cs45=cs44+44,cs46=cs45+44;
+      const sw12=cs46+70, sw13=sw12+36, sw14=sw13+36;
+      const saw13=sw14+80, n13=12, end13=saw13+n13*26;
+      const g13=end13+55, g13w=110, a13=g13+g13w;
+      const saw14=a13+40, n14=10, end14=saw14+n14*24;
+      const sp11=end14+80, sp12=end14+190;
+      return {
+        segs:[
+          {x:0,w:g1,type:'f'},{x:g1,w:g1w,type:'g'},
+          {x:a1,w:g2-a1,type:'f'},{x:g2,w:g2w,type:'g'},
+          {x:a2,w:g3-a2,type:'f'},{x:g3,w:g3w,type:'g'},
+          {x:a3,w:g4-a3,type:'f'},{x:g4,w:g4w,type:'g'},
+          {x:a4,w:g5-a4,type:'f'},{x:g5,w:g5w,type:'g'},
+          {x:a5,w:g6-a5,type:'f'},{x:g6,w:g6w,type:'g'},
+          {x:a6,w:g7-a6,type:'f'},{x:g7,w:g7w,type:'g'},
+          {x:a7,w:g8-a7,type:'f'},{x:g8,w:g8w,type:'g'},
+          {x:a8,w:g9-a8,type:'f'},{x:g9,w:g9w,type:'g'},
+          {x:a9,w:g10-a9,type:'f'},{x:g10,w:g10w,type:'g'},
+          {x:a10,w:g11-a10,type:'f'},{x:g11,w:g11w,type:'g'},
+          {x:a11,w:g12-a11,type:'f'},{x:g12,w:g12w,type:'g'},
+          {x:a12,w:g13-a12,type:'f'},{x:g13,w:g13w,type:'g'},
+          {x:a13,w:99999,type:'f'},
+        ],
+        obs:[
+          {type:'s',wx:sp1,wy:f-22,w:24,h:22},{type:'s',wx:sp2,wy:f-22,w:24,h:22},
+          ...saw(saw1,n1),...saw(saw2,n2),
+          {type:'c',wx:cs1,wy:HH,w:22,h:20},{type:'c',wx:cs2,wy:HH,w:22,h:20},
+          {type:'c',wx:cs3,wy:HH,w:22,h:20},{type:'c',wx:cs4,wy:HH,w:22,h:20},
+          {type:'c',wx:cs5,wy:HH,w:22,h:20},
+          ...saw(saw3,n3,28),
+          {type:'s',wx:sw1,wy:f-22,w:24,h:22},{type:'s',wx:sw2,wy:f-22,w:24,h:22},
+          {type:'s',wx:sp3,wy:f-22,w:24,h:22},
+          ...saw(saw4,n4),
+          {type:'c',wx:cs6,wy:HH,w:22,h:20},{type:'c',wx:cs7,wy:HH,w:22,h:20},
+          {type:'c',wx:cs8,wy:HH,w:22,h:20},{type:'c',wx:cs9,wy:HH,w:22,h:20},
+          {type:'c',wx:cs10,wy:HH,w:22,h:20},{type:'c',wx:cs11,wy:HH,w:22,h:20},
+          {type:'c',wx:cs12,wy:HH,w:22,h:20},
+          {type:'s',wx:sp4,wy:f-22,w:24,h:22},
+          ...saw(saw5,n5,28),...saw(saw6,n6,24),
+          {type:'s',wx:sw3,wy:f-22,w:24,h:22},{type:'s',wx:sw4,wy:f-22,w:24,h:22},
+          {type:'c',wx:cs13,wy:HH,w:22,h:20},{type:'c',wx:cs14,wy:HH,w:22,h:20},
+          {type:'c',wx:cs15,wy:HH,w:22,h:20},
+          {type:'s',wx:sp5,wy:f-22,w:24,h:22},{type:'s',wx:sp6,wy:f-22,w:24,h:22},
+          ...saw(saw7,n7,24),...saw(saw8,n8),
+          {type:'c',wx:cs16,wy:HH,w:22,h:20},{type:'c',wx:cs17,wy:HH,w:22,h:20},
+          {type:'c',wx:cs18,wy:HH,w:22,h:20},{type:'c',wx:cs19,wy:HH,w:22,h:20},
+          {type:'c',wx:cs20,wy:HH,w:22,h:20},{type:'c',wx:cs21,wy:HH,w:22,h:20},
+          ...saw(saw9,n9,26),
+          {type:'s',wx:sw5,wy:f-22,w:24,h:22},{type:'s',wx:sw6,wy:f-22,w:24,h:22},
+          {type:'s',wx:sw7,wy:f-22,w:24,h:22},
+          {type:'c',wx:cs22,wy:HH,w:22,h:20},{type:'c',wx:cs23,wy:HH,w:22,h:20},
+          {type:'s',wx:sp7,wy:f-22,w:24,h:22},{type:'s',wx:sp8,wy:f-22,w:24,h:22},
+          ...saw(saw10,n10,24),
+          {type:'c',wx:cs24,wy:HH,w:22,h:20},{type:'c',wx:cs25,wy:HH,w:22,h:20},
+          {type:'c',wx:cs26,wy:HH,w:22,h:20},{type:'c',wx:cs27,wy:HH,w:22,h:20},
+          {type:'c',wx:cs28,wy:HH,w:22,h:20},{type:'c',wx:cs29,wy:HH,w:22,h:20},
+          {type:'c',wx:cs30,wy:HH,w:22,h:20},{type:'c',wx:cs31,wy:HH,w:22,h:20},
+          ...saw(saw11,n11,26),
+          {type:'s',wx:sw8,wy:f-22,w:24,h:22},{type:'s',wx:sw9,wy:f-22,w:24,h:22},
+          {type:'c',wx:cs32,wy:HH,w:22,h:20},{type:'c',wx:cs33,wy:HH,w:22,h:20},
+          {type:'c',wx:cs34,wy:HH,w:22,h:20},
+          {type:'s',wx:sw10,wy:f-22,w:24,h:22},{type:'s',wx:sw11,wy:f-22,w:24,h:22},
+          {type:'c',wx:cs35,wy:HH,w:22,h:20},{type:'c',wx:cs36,wy:HH,w:22,h:20},
+          {type:'c',wx:cs37,wy:HH,w:22,h:20},
+          {type:'s',wx:sp9,wy:f-22,w:24,h:22},{type:'s',wx:sp10,wy:f-22,w:24,h:22},
+          ...saw(saw12,n12,24),
+          {type:'c',wx:cs38,wy:HH,w:22,h:20},{type:'c',wx:cs39,wy:HH,w:22,h:20},
+          {type:'c',wx:cs40,wy:HH,w:22,h:20},{type:'c',wx:cs41,wy:HH,w:22,h:20},
+          {type:'c',wx:cs42,wy:HH,w:22,h:20},{type:'c',wx:cs43,wy:HH,w:22,h:20},
+          {type:'c',wx:cs44,wy:HH,w:22,h:20},{type:'c',wx:cs45,wy:HH,w:22,h:20},
+          {type:'c',wx:cs46,wy:HH,w:22,h:20},
+          {type:'s',wx:sw12,wy:f-22,w:24,h:22},{type:'s',wx:sw13,wy:f-22,w:24,h:22},
+          {type:'s',wx:sw14,wy:f-22,w:24,h:22},
+          ...saw(saw13,n13,26),...saw(saw14,n14,24),
+          {type:'s',wx:sp11,wy:f-22,w:24,h:22},{type:'s',wx:sp12,wy:f-22,w:24,h:22},
+        ],
+        mplats:[
+          {wx:g1-50,w:72,base:f-105,amp:26,freq:1.2,phase:0},
+          {wx:g2-50,w:70,base:f-100,amp:28,freq:1.3,phase:.4},
+          {wx:g3-50,w:70,base:f-100,amp:28,freq:1.25,phase:.8},
+          {wx:g4-50,w:68,base:f-105,amp:26,freq:1.4,phase:1.2},
+          {wx:g5-50,w:68,base:f-100,amp:30,freq:1.3,phase:1.6},
+          {wx:g6-50,w:66,base:f-100,amp:32,freq:1.45,phase:2.0},
+          {wx:g7-50,w:66,base:f-100,amp:30,freq:1.3,phase:2.4},
+          {wx:g8-50,w:64,base:f-105,amp:28,freq:1.5,phase:2.8},
+          {wx:g9-50,w:64,base:f-100,amp:32,freq:1.4,phase:0.2},
+          {wx:g10-50,w:62,base:f-100,amp:34,freq:1.45,phase:0.7},
+          {wx:g11-50,w:62,base:f-105,amp:32,freq:1.5,phase:1.3},
+          {wx:g12-50,w:60,base:f-100,amp:36,freq:1.55,phase:1.9},
+          {wx:g13-50,w:60,base:f-100,amp:36,freq:1.6,phase:2.5},
+        ],
+        // Spike balls: aggressive oscillators throughout the level
+        sballs:[
+          {wx:saw3+n3*28*0.5,  r:20, base:f-85, amp:72, freq:1.2, phase:0},
+          {wx:saw6+n6*24*0.5,  r:20, base:f-85, amp:76, freq:1.3, phase:0.7},
+          {wx:saw9+n9*26*0.5,  r:20, base:f-82, amp:78, freq:1.25,phase:1.4},
+          {wx:saw11+n11*26*0.5,r:22, base:f-80, amp:80, freq:1.4, phase:2.1},
+          {wx:saw12+n12*24*0.5,r:20, base:f-85, amp:74, freq:1.35,phase:2.8},
+          {wx:saw13+n13*26*0.5,r:22, base:f-80, amp:82, freq:1.45,phase:3.5},
+          {wx:saw14+n14*24*0.5,r:22, base:f-78, amp:80, freq:1.5, phase:4.2},
+        ],
+        cpX:[cp1,cp2,cp3,cp4],
+      };
+    }
+  }
+];
+
+// ─── ENGINE STATE ─────────────────────────────────────────────────────────
+const canvas=document.getElementById('c');
+const ctx=canvas.getContext('2d');
+let W=canvas.width=innerWidth, H=canvas.height=innerHeight;
+const HH=46;
+
+let mode='start'; // start|playing|question|levelcomplete|gameover|win
+const BONUS_LEVELS=new Set([3,6,9]); // 0-indexed levels that have a bonus CP (last CP only)
+let lvl=0, lives=3, score=0;
+
+// Per-run question pools (shuffled once at game start, drawn from sequentially)
+// emPool = Easy+Medium indices (for first CP of each level)
+// mhPool = Medium+Hard indices (for later CPs)
+let emPool=[], mhPool=[];
+let emHead=0, mhHead=0;  // read heads
+
+let hardPool=[], hardHead=0; // Pool C questions for bonus + levels 6-10
+
+function buildPools(){
+  // Pool F (index 0): fixed — always Q0 for Level 1
+  // Pool S (indices 1-30): statement identification — Levels 2-5
+  // Pool C (indices 31-59): conceptual — Levels 6-10 + all bonus questions
+  const stmtPool  = QB.map((q,i)=>i).filter(i=>QB[i].d==='S');
+  const concPool  = QB.map((q,i)=>i).filter(i=>QB[i].d==='C');
+  emPool   = shuffleArr([...stmtPool]);   // re-used for Levels 2-5
+  mhPool   = shuffleArr([...concPool]);   // re-used for Levels 6-10
+  hardPool = shuffleArr([...concPool]);   // bonus questions drawn from same conceptual pool
+  emHead=0; mhHead=0; hardHead=0;
+}
+
+function drawFromPool(pool){
+  if(pool===emPool){const q=emPool[emHead%emPool.length];emHead++;return q;}
+  if(pool===mhPool){const q=mhPool[mhHead%mhPool.length];mhHead++;return q;}
+  if(pool===hardPool){const q=hardPool[hardHead%hardPool.length];hardHead++;return q;}
+}
+
+// Built level data
+let segs=[], obs=[], mplats=[], sballs=[], cpX=[], gateX=0, lvlLen=0, lvlSpd=2;
+
+// Checkpoint state
+let cpReached=[]; // bool array
+let cpQIdx=[];    // which QB question each checkpoint uses
+let activeCpIdx=-1; // which cp triggered the question
+let lastCpX=-1;    // world-x of checkpoint player just hit
+let lastCorrectCpX=-1; // world-x of last correctly answered checkpoint (respawn point)
+
+// Player
+const P={x:0,y:0,w:28,h:34,vy:0,jumps:2,alive:true,dTimer:0,inv:0};
+const GRAV=0.62, JF=-13.8, JF2=-11.5;
+
+let camX=0;
+let parts=[];
+
+function FY(){return Math.floor(H*.77);}
+
+// ─── BUILD LEVEL ─────────────────────────────────────────────────────────
+function buildLevel(li){
+  W=canvas.width=innerWidth; H=canvas.height=innerHeight;
+  const def=LEVEL_DEFS[li];
+  const layout=def.layout(W,H,FY());
+  segs=layout.segs;
+  obs=layout.obs;
+  mplats=layout.mplats.map(m=>({...m,wx:Math.max(10,m.wx)}));
+  sballs=(layout.sballs||[]);
+  cpX=layout.cpX;
+  lvlSpd=def.spd;
+  // Compute gateX as 250px after rightmost obstacle/checkpoint/mplat
+  const lastObsX=obs.length?Math.max(...obs.map(o=>o.wx+o.w)):0;
+  const lastCpWX=cpX.length?Math.max(...cpX):0;
+  const lastMpX=mplats.length?Math.max(...mplats.map(m=>m.wx+m.w)):0;
+  const lastThingX=Math.max(lastObsX,lastCpWX,lastMpX);
+  gateX=lastThingX+250;
+  // Extend totalLen so floor and level reach past the gate
+  const neededLen=gateX+W*0.75;
+  lvlLen=neededLen;
+  // Stretch the last floor segment to cover all the way to neededLen
+  for(let i=segs.length-1;i>=0;i--){
+    if(segs[i].type==='f'){segs[i].w=neededLen-segs[i].x;break;}
+  }
+
+  // Assign questions to checkpoints on first trigger (not here).
+  // cpQIdx[i] = -1 means "not yet assigned" — assigned on first CP touch.
+  cpReached=cpX.map(()=>false);
+  cpQIdx=cpX.map(()=>-1); // will be filled lazily on first hit
+
+  camX=0;
+  activeCpIdx=-1;
+  lastCpX=-1;
+  lastCorrectCpX=-1;
+
+  P.x=80; P.y=FY()-P.h;
+  P.vy=0; P.jumps=2; P.alive=true; P.dTimer=0; P.inv=45;
+  parts=[];
+}
+
+function resetToLastCheckpoint(){
+  // Respawn so player appears exactly on the checkpoint flag
+  // camX = cpWorldX - P.x  =>  player screen pos = P.x = 80, flag at same spot
+  if(lastCorrectCpX < 0){
+    camX=0; // no checkpoint reached yet — back to level start
+  } else {
+    camX=Math.max(0, lastCorrectCpX - P.x);
+  }
+  P.x=80; P.y=FY()-P.h;
+  P.vy=0; P.jumps=2; P.alive=true; P.dTimer=0; P.inv=45;
+  parts=[];
+}
+
+// ─── INPUT ───────────────────────────────────────────────────────────────
+let jQ=false;
+function doJump(){if(mode==='playing'&&P.alive&&P.jumps>0)jQ=true;}
+document.getElementById('tz').addEventListener('pointerdown',e=>{e.preventDefault();doJump();});
+window.addEventListener('keydown',e=>{
+  if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW'){e.preventDefault();doJump();}
+});
+
+// ─── PHYSICS ─────────────────────────────────────────────────────────────
+function inGap(wx){
+  for(const s of segs) if(s.type==='g'&&wx>s.x&&wx<s.x+s.w) return true;
+  return false;
+}
+
+function updatePhysics(){
+  const fy=FY();
+  if(!P.alive){
+    P.dTimer++;
+    if(P.dTimer>52){
+      flashFn('#ef4444','fr');
+      resetToLastCheckpoint();
+    }
+    return;
+  }
+  if(P.inv>0)P.inv--;
+
+  if(jQ&&P.jumps>0){
+    P.vy=P.jumps===2?JF:JF2;
+    P.jumps--;
+    emit(P.x+P.w/2,P.y+P.h,'rgba(240,192,64,.9)',5);
+  }
+  jQ=false;
+  P.vy=Math.min(P.vy+GRAV,18);
+  P.y+=P.vy;
+
+  // world-x center of player
+  const pwx=P.x+camX+P.w/2;
+
+  // Floor
+  if(P.y+P.h>=fy&&P.y+P.h<=fy+26&&P.vy>=0){
+    if(!inGap(pwx)){P.y=fy-P.h;P.vy=0;P.jumps=2;}
+  }
+
+  // Moving platforms — mp.wy already updated in main loop
+  for(const mp of mplats){
+    const msx=mp.wx-camX;
+    const mpy=mp.wy||mp.base;
+    if(P.x+P.w>msx&&P.x<msx+mp.w&&P.y+P.h>=mpy&&P.y+P.h<=mpy+26&&P.vy>=0){
+      P.y=mpy-P.h;P.vy=0;P.jumps=2;
+    }
+  }
+
+  if(P.y<HH){P.y=HH;P.vy=0;}
+  if(P.y>H+60){die();return;}
+
+  // Hazard collision (spikes + spike balls) — skip while invincible
+  if(P.inv===0){
+    const px=P.x+camX;
+    for(const o of obs){
+      if(o.type==='s'){
+        if(px+P.w>o.wx+3&&px<o.wx+o.w-3&&P.y+P.h>o.wy+5&&P.y<o.wy+o.h){die();return;}
+      } else if(o.type==='c'){
+        if(px+P.w>o.wx+2&&px<o.wx+o.w-2&&P.y<o.wy+o.h&&P.y+6>o.wy){die();return;}
+      }
+    }
+    for(const sb of sballs){
+      if(sb._cy===undefined)continue;
+      const scx=sb.wx-camX;
+      const dx=P.x+P.w/2-scx, dy=P.y+P.h/2-sb._cy;
+      if(Math.sqrt(dx*dx+dy*dy)<sb.r+8){die();return;}
+    }
+  }
+
+  // Checkpoint collision
+  for(let i=0;i<cpX.length;i++){
+    if(!cpReached[i]){
+      const csx=cpX[i]-camX;
+      if(P.x+P.w>csx-20&&P.x<csx+20){
+        cpReached[i]=true;
+        lastCpX=cpX[i];
+        activeCpIdx=i;
+        // Lazy question assignment: draw from shuffled pool on first hit,
+        // keep same question on retry (cpQIdx[i] already set).
+        if(cpQIdx[i]===-1){
+          if(lvl===0){
+            cpQIdx[i]=0; // Level 1 always uses QB[0] (fixed accounting equation)
+          } else if(lvl<=4){
+            cpQIdx[i]=drawFromPool(emPool); // Levels 2-5: statement ID pool
+          } else {
+            cpQIdx[i]=drawFromPool(mhPool); // Levels 6-10: conceptual pool
+          }
+        }
+        triggerQ(i, false);
+        return;
+      }
+    }
+  }
+
+  // Gate collision
+  const gsx=gateX-camX;
+  if(P.x+P.w>gsx&&P.x<gsx+50&&P.y+P.h>FY()-62&&P.y<FY()){
+    showLC();
+  }
+}
+
+function die(){
+  if(!P.alive)return;
+  P.alive=false;P.dTimer=0;
+  emit(P.x+P.w/2,P.y+P.h/2,'#ef4444',16);
+}
+
+// ─── PARTICLES ───────────────────────────────────────────────────────────
+function emit(x,y,c,n){
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2,s=1.5+Math.random()*4;
+    parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-2,l:1,c});
+  }
+}
+
+// ─── DRAWING ─────────────────────────────────────────────────────────────
+function drawBg(li){
+  const [t,b]=LEVEL_DEFS[li].bg;
+  const g=ctx.createLinearGradient(0,HH,0,H);
+  g.addColorStop(0,t);g.addColorStop(1,b);
+  ctx.fillStyle=g;ctx.fillRect(0,HH,W,H-HH);
+  ctx.fillStyle='rgba(180,210,255,.35)';
+  for(let i=0;i<22;i++){
+    const sx=Math.abs(Math.sin(i*137.5)*W)%W;
+    const sy=Math.abs(Math.cos(i*97.3)*(H*.44))+HH+8;
+    ctx.beginPath();ctx.arc(sx,sy,.7+((i*31)%3)*.4,0,Math.PI*2);ctx.fill();
+  }
+  // grid
+  ctx.strokeStyle='rgba(255,255,255,.02)';ctx.lineWidth=1;
+  const fy=FY();
+  for(let gx=((-camX)%64+64)%64;gx<W;gx+=64){
+    ctx.beginPath();ctx.moveTo(gx,HH);ctx.lineTo(gx,fy);ctx.stroke();
+  }
+}
+
+function drawFloor(){
+  const fy=FY();
+  for(const s of segs){
+    const sx=s.x-camX;
+    if(sx+s.w<-4||sx>W+4)continue;
+    if(s.type==='f'){
+      ctx.fillStyle='#1e293b';ctx.fillRect(sx,fy,s.w,24);
+      ctx.fillStyle='#334155';ctx.fillRect(sx,fy,s.w,3);
+      ctx.strokeStyle='rgba(255,255,255,.04)';ctx.lineWidth=1;
+      for(let tx=Math.floor(sx/32)*32;tx<sx+s.w;tx+=32){
+        ctx.beginPath();ctx.moveTo(tx,fy);ctx.lineTo(tx,fy+24);ctx.stroke();
+      }
+    } else {
+      ctx.fillStyle='rgba(0,0,0,.9)';ctx.fillRect(sx,fy,s.w,24);
+      ctx.fillStyle='rgba(239,68,68,.07)';ctx.fillRect(sx,fy-4,s.w,4);
+      ctx.strokeStyle='rgba(239,68,68,.15)';ctx.lineWidth=1;
+      ctx.setLineDash([4,10]);
+      ctx.beginPath();ctx.moveTo(sx,fy);ctx.lineTo(sx+s.w,fy);ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
+}
+
+function drawSpike(wx,wy,w,h,flip){
+  const sx=wx-camX;
+  if(sx+w<-4||sx>W+4)return;
+  const n=Math.max(1,Math.floor(w/11));
+  const tw=w/n;
+  ctx.fillStyle='#dc2626';
+  for(let i=0;i<n;i++){
+    const bx=sx+i*tw;
+    ctx.beginPath();
+    if(!flip){ctx.moveTo(bx,wy+h);ctx.lineTo(bx+tw/2,wy);ctx.lineTo(bx+tw,wy+h);}
+    else{ctx.moveTo(bx,wy);ctx.lineTo(bx+tw/2,wy+h);ctx.lineTo(bx+tw,wy);}
+    ctx.closePath();ctx.fill();
+  }
+  ctx.fillStyle='rgba(252,165,165,.35)';
+  for(let i=0;i<n;i++){
+    const bx=sx+i*tw;
+    ctx.beginPath();
+    if(!flip){ctx.moveTo(bx+tw*.3,wy+h);ctx.lineTo(bx+tw/2,wy+5);ctx.lineTo(bx+tw*.7,wy+h);}
+    else{ctx.moveTo(bx+tw*.3,wy);ctx.lineTo(bx+tw/2,wy+h-5);ctx.lineTo(bx+tw*.7,wy);}
+    ctx.closePath();ctx.fill();
+  }
+}
+
+function drawMplats(){
+  for(const mp of mplats){
+    const sx=mp.wx-camX;
+    if(sx+mp.w<-4||sx>W+4)continue;
+    const y=mp.wy||mp.base;
+    ctx.fillStyle='#4338ca';ctx.fillRect(sx,y,mp.w,14);
+    ctx.fillStyle='rgba(167,139,250,.55)';ctx.fillRect(sx,y,mp.w,3);
+    ctx.strokeStyle='rgba(167,139,250,.2)';ctx.lineWidth=1;
+    for(let i=0;i<mp.w;i+=14){
+      ctx.beginPath();ctx.moveTo(sx+i,y+14);ctx.lineTo(sx+i+7,y+2);ctx.lineTo(sx+i+14,y+14);ctx.stroke();
+    }
+  }
+}
+
+function drawSballs(){
+  const t=Date.now()/1000;
+  const fy=FY();
+  for(const sb of sballs){
+    const cx=sb.wx-camX;
+    if(cx+sb.r<-10||cx-sb.r>W+10)continue;
+    const cy=sb.base+Math.sin(t*sb.freq+sb.phase)*sb.amp;
+    sb._cy=cy; // cache for collision
+    const r=sb.r;
+    // Glow
+    ctx.fillStyle='rgba(239,68,68,0.15)';
+    ctx.beginPath();ctx.arc(cx,cy,r+8,0,Math.PI*2);ctx.fill();
+    // Body
+    ctx.fillStyle='#7f1d1d';
+    ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();
+    // Inner sheen
+    ctx.fillStyle='#dc2626';
+    ctx.beginPath();ctx.arc(cx,cy,r*0.65,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(252,165,165,0.4)';
+    ctx.beginPath();ctx.arc(cx-r*0.25,cy-r*0.25,r*0.28,0,Math.PI*2);ctx.fill();
+    // 8 spikes radiating outward
+    ctx.fillStyle='#dc2626';
+    for(let i=0;i<8;i++){
+      const angle=(i/8)*Math.PI*2+t*0.8; // slow rotation
+      const tx=cx+Math.cos(angle)*(r+10);
+      const ty=cy+Math.sin(angle)*(r+10);
+      const lx=cx+Math.cos(angle-0.35)*r;
+      const ly=cy+Math.sin(angle-0.35)*r;
+      const rx2=cx+Math.cos(angle+0.35)*r;
+      const ry2=cy+Math.sin(angle+0.35)*r;
+      ctx.beginPath();ctx.moveTo(tx,ty);ctx.lineTo(lx,ly);ctx.lineTo(rx2,ry2);ctx.closePath();ctx.fill();
+    }
+    // Warning: draw faint line showing travel path
+    ctx.strokeStyle='rgba(239,68,68,0.08)';ctx.lineWidth=1.5;ctx.setLineDash([4,6]);
+    ctx.beginPath();ctx.moveTo(cx,sb.base-sb.amp);ctx.lineTo(cx,sb.base+sb.amp);ctx.stroke();
+    ctx.setLineDash([]);
+  }
+}
+
+function drawCheckpoints(){
+  const isLastCPBonus=BONUS_LEVELS.has(lvl);
+  for(let i=0;i<cpX.length;i++){
+    const sx=cpX[i]-camX;
+    if(sx<-20||sx>W+20)continue;
+    const reached=cpReached[i];
+    const fy=FY();
+    const isBonus=isLastCPBonus && i===cpX.length-1;
+    // Flag pole
+    ctx.fillStyle=reached?'#4ade80':isBonus?'#a855f7':'#fbbf24';
+    ctx.fillRect(sx-2,fy-70,4,70);
+    if(isBonus && !reached){
+      // Purple shiny flag body
+      const pulse=Math.sin(Date.now()/350)*.2+.8;
+      // Outer glow
+      ctx.globalAlpha=0.25*pulse;
+      ctx.fillStyle='#c084fc';
+      ctx.beginPath();ctx.arc(sx+17,fy-59,22,0,Math.PI*2);ctx.fill();
+      ctx.globalAlpha=1;
+      // Main flag triangle
+      ctx.fillStyle='#7e22ce';
+      ctx.beginPath();
+      ctx.moveTo(sx+2,fy-70);
+      ctx.lineTo(sx+30,fy-58);
+      ctx.lineTo(sx+2,fy-46);
+      ctx.closePath();ctx.fill();
+      // Sheen highlight (top-left diagonal strip)
+      ctx.fillStyle='rgba(233,213,255,0.45)';
+      ctx.beginPath();
+      ctx.moveTo(sx+2,fy-70);
+      ctx.lineTo(sx+18,fy-63);
+      ctx.lineTo(sx+10,fy-55);
+      ctx.lineTo(sx+2,fy-58);
+      ctx.closePath();ctx.fill();
+      // Star icon
+      ctx.globalAlpha=pulse;
+      ctx.fillStyle='#e9d5ff';
+      ctx.font="bold 13px 'Space Mono',monospace";
+      ctx.textAlign='center';
+      ctx.fillText('★',sx+15,fy-56);
+      ctx.textAlign='left';
+      ctx.globalAlpha=1;
+      // Label above flag
+      ctx.globalAlpha=0.7+0.3*pulse;
+      ctx.fillStyle='#c084fc';
+      ctx.font="bold 9px 'Space Mono',monospace";
+      ctx.textAlign='center';
+      ctx.fillText('BONUS',sx+15,fy-78);
+      ctx.textAlign='left';
+      ctx.globalAlpha=1;
+    } else {
+      // Normal flag body
+      ctx.fillStyle=reached?'rgba(74,222,128,.5)':'rgba(251,191,36,.9)';
+      ctx.beginPath();
+      ctx.moveTo(sx+2,fy-70);
+      ctx.lineTo(sx+28,fy-58);
+      ctx.lineTo(sx+2,fy-46);
+      ctx.closePath();ctx.fill();
+      if(!reached){
+        const pulse=Math.sin(Date.now()/400)*.2+.8;
+        ctx.globalAlpha=pulse;
+        ctx.fillStyle='#fbbf24';
+        ctx.font="bold 11px 'Space Mono',monospace";
+        ctx.textAlign='center';
+        ctx.fillText('CP',sx+14,fy-78);
+        ctx.textAlign='left';
+        ctx.globalAlpha=1;
+      }
+    }
+  }
+}
+
+function drawGate(){
+  const sx=gateX-camX;
+  if(sx+50<-4||sx>W+4)return;
+  const fy=FY();
+  const pulse=Math.sin(Date.now()/380)*.25+.75;
+  ctx.fillStyle=`rgba(240,192,64,${.1*pulse})`;
+  ctx.fillRect(sx-14,fy-76,78,76);
+  ctx.fillStyle='#92400e';
+  ctx.fillRect(sx,fy-62,7,62);
+  ctx.fillRect(sx+43,fy-62,7,62);
+  ctx.fillStyle='#f0c040';ctx.fillRect(sx,fy-62,50,7);
+  ctx.fillStyle=`rgba(240,192,64,${.18*pulse})`;
+  ctx.fillRect(sx+7,fy-55,36,55);
+  ctx.fillStyle='#f0c040';
+  ctx.font="bold 26px 'Space Mono',monospace";
+  ctx.textAlign='center';
+  ctx.fillText('$',sx+25,fy-22);
+  ctx.textAlign='left';
+  const bp=Math.sin(Date.now()/300)*6;
+  ctx.fillStyle='rgba(240,192,64,.75)';
+  ctx.font='13px monospace';ctx.textAlign='center';
+  ctx.fillText('▶',sx+25+bp,fy-70);
+  ctx.textAlign='left';
+}
+
+function drawPlayer(){
+  if(!P.alive&&P.dTimer%4<2)return;
+  const a=P.inv>0?(Math.sin(P.inv*.9)*.35+.65):1;
+  ctx.globalAlpha=a;
+  ctx.fillStyle='#f0c040';
+  if(ctx.roundRect)ctx.roundRect(P.x,P.y,P.w,P.h,4);
+  else ctx.rect(P.x,P.y,P.w,P.h);
+  ctx.fill();
+  ctx.fillStyle='#0f172a';
+  ctx.fillRect(P.x+5,P.y+5,P.w-10,P.h-10);
+  ctx.fillStyle='#f0c040';
+  const cx=P.x+P.w/2,cy=P.y+P.h/2;
+  ctx.beginPath();
+  ctx.moveTo(cx,cy-6);ctx.lineTo(cx+6,cy);ctx.lineTo(cx,cy+6);ctx.lineTo(cx-6,cy);
+  ctx.closePath();ctx.fill();
+  ctx.globalAlpha=1;
+}
+
+function drawParticles(){
+  for(const p of parts){
+    ctx.globalAlpha=p.l;
+    ctx.fillStyle=p.c;
+    ctx.beginPath();ctx.arc(p.x,p.y,3*p.l,0,Math.PI*2);ctx.fill();
+  }
+  ctx.globalAlpha=1;
+}
+
+// ─── QUESTION SYSTEM ─────────────────────────────────────────────────────
+let curQ=null,qAns=false,qOk=false,qIsGate=false;
+let isBonusQ=false,bonusQIdx=-1; // bonus life question state
+
+// Shuffle helper
+function shuffleArr(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=0|Math.random()*(i+1);[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+// curShuffledIndices[i] = original option index that is now at display position i
+let curShuffledIndices=[];
+
+function triggerQ(cpIdx, isGate){
+  mode='question';
+  qIsGate=isGate;
+  isBonusQ=false; // reset bonus flag
+  document.getElementById('tz').classList.remove('on');
+  const qIdx=isGate? cpQIdx[cpX.length-1] : cpQIdx[cpIdx];
+  const q=QB[qIdx];
+  curQ=q;qAns=false;qOk=false;
+
+  // Shuffle option order
+  curShuffledIndices=shuffleArr([0,1,2,3]);
+
+  const qov=document.getElementById('qov');
+  qov.classList.remove('bonus-mode');
+  document.getElementById('qtype').className='cpbadge';
+  document.getElementById('qtype').textContent=isGate?'Level Gate':'Checkpoint';
+  document.getElementById('qbadge').textContent=isGate
+    ?`Level ${lvl+1} · Final Gate`
+    :`Level ${lvl+1} · Checkpoint ${cpIdx+1} of ${cpX.length}`;
+  document.getElementById('qtext').textContent=q.q;
+  document.getElementById('qexpl').classList.remove('show');
+  const qc=document.getElementById('qcont');
+  qc.classList.remove('show');qc.textContent='Continue →';
+  renderOpts(q);
+  HS('hud');SS('qov');
+}
+
+function triggerBonusQ(){
+  // Shown after a successful CP answer on a bonus level — Hard question only, no life penalty
+  isBonusQ=true;
+  bonusQIdx=drawFromPool(hardPool);
+  const q=QB[bonusQIdx];
+  curQ=q;qAns=false;qOk=false;
+  curShuffledIndices=shuffleArr([0,1,2,3]);
+
+  const qov=document.getElementById('qov');
+  qov.classList.add('bonus-mode');
+  const badge=document.getElementById('qtype');
+  badge.className='bonusbadge';
+  badge.textContent='★ BONUS — Earn an extra life!';
+  document.getElementById('qbadge').textContent='Hard question · No penalty for wrong answer';
+  document.getElementById('qtext').textContent=q.q;
+  document.getElementById('qexpl').classList.remove('show');
+  const qc=document.getElementById('qcont');
+  qc.classList.remove('show');qc.textContent='Continue →';
+  renderOpts(q);
+  SS('qov'); // already visible, just refresh content
+}
+
+function renderOpts(q){
+  const oc=document.getElementById('qopts');
+  oc.innerHTML='';
+  curShuffledIndices.forEach((origIdx,displayPos)=>{
+    const b=document.createElement('button');
+    b.className='qopt';
+    b.textContent=['A','B','C','D'][displayPos]+'. '+q.o[origIdx];
+    b.onclick=()=>ansQ(displayPos,b);
+    oc.appendChild(b);
+  });
+}
+
+function ansQ(displayPos,btn){
+  if(qAns)return;qAns=true;
+  const allBtns=document.querySelectorAll('.qopt');
+  allBtns.forEach(b=>b.classList.add('disabled'));
+  const origIdx=curShuffledIndices[displayPos];
+  const correctDisplayPos=curShuffledIndices.indexOf(curQ.a);
+
+  if(origIdx===curQ.a){
+    btn.classList.add('correct');
+    if(isBonusQ){
+      // Bonus correct → gain a life + 50 bonus pts
+      lives++;score+=50;
+      updateLives();
+      emit(P.x+P.w/2,P.y+P.h/2,'#fde047',14);
+      document.getElementById('qexpl').textContent='★ Extra life earned! '+curQ.e;
+      document.getElementById('qcont').textContent='Claim Life →';
+    } else {
+      qOk=true;score+=100;
+      emit(P.x+P.w/2,P.y+P.h/2,'#4ade80',10);
+      document.getElementById('qexpl').textContent=curQ.e;
+    }
+  } else {
+    btn.classList.add('wrong');
+    allBtns[correctDisplayPos].classList.add('correct');
+    if(isBonusQ){
+      // Bonus wrong → no penalty, just show explanation
+      document.getElementById('qexpl').textContent=
+        (curQ.oe?curQ.oe[origIdx]:curQ.e)+' \n\nCorrect answer: '+curQ.e;
+      document.getElementById('qcont').textContent='Continue →';
+    } else {
+      lives--;updateLives();
+      document.getElementById('qcont').textContent=lives<=0?'See Result':'Try Again';
+      const wrongExpl=curQ.oe?curQ.oe[origIdx]:curQ.e;
+      document.getElementById('qexpl').textContent=wrongExpl+' \n\nCorrect answer: '+curQ.e;
+    }
+  }
+  document.getElementById('qexpl').classList.add('show');
+  document.getElementById('qcont').classList.add('show');
+}
+
+function afterQ(){
+  HS('qov'); // always hide the question overlay first
+  document.getElementById('qov').classList.remove('bonus-mode');
+
+  // Bonus question path
+  if(isBonusQ){
+    isBonusQ=false;
+
+    mode='playing';
+    SS('hud');
+    document.getElementById('tz').classList.add('on');
+    flashFn(qOk?'#f0c040':'#374151','fr');
+    return;
+  }
+
+  if(qOk){
+    // Correct CP answer — mark respawn point
+    lastCorrectCpX=lastCpX;
+    // Check if this is a bonus CP (last CP on levels 3, 6, 9)
+    const isLastCP = activeCpIdx === cpX.length - 1;
+    const isBonusLevel = BONUS_LEVELS.has(lvl);
+    if(isLastCP && isBonusLevel){
+      // Show bonus question — don't resume yet
+      triggerBonusQ();
+      return;
+    }
+    mode='playing';
+    SS('hud');
+    document.getElementById('tz').classList.add('on');
+    flashFn('#4ade80','fg');
+  } else if(lives<=0){
+    showGO();
+  } else {
+    flashFn('#ef4444','fr');
+    if(activeCpIdx>=0) cpReached[activeCpIdx]=false;
+    resetToLastCheckpoint();
+    mode='playing';
+    SS('hud');
+    document.getElementById('tz').classList.add('on');
+  }
+}
+
+// ─── SCREENS ─────────────────────────────────────────────────────────────
+function updateLives(){
+  // Support >3 lives with extra gold hearts
+  let display='';
+  const base=3;
+  for(let i=0;i<Math.max(base,lives);i++){
+    if(i<lives) display+=(i<base?'♥':'★')+' ';
+    else display+='♡ ';
+  }
+  document.getElementById('hv').textContent=display.trim();
+  document.getElementById('hv').style.color=lives===1?'#ef4444':lives>3?'#fde047':'#f87171';
+}
+function showLC(){
+  mode='levelcomplete';
+  document.getElementById('lcn').textContent=LEVEL_DEFS[lvl].name+' cleared!';
+  document.getElementById('lcs').textContent='Score: '+score+' pts';
+  document.getElementById('lpf').style.width=((lvl+1)/10*100)+'%';
+  HS('hud');document.getElementById('tz').classList.remove('on');
+  SS('lc');
+}
+function nextLevel(){
+  HS('lc');lvl++;
+  if(lvl>=10){showWin();return;}
+  buildLevel(lvl);mode='playing';
+  document.getElementById('hl').textContent=`Level ${lvl+1}: ${LEVEL_DEFS[lvl].name}`;
+  document.getElementById('hs').textContent=score+' pts';
+  SS('hud');document.getElementById('tz').classList.add('on');
+  document.getElementById('pause-btn').style.display='flex';
+}
+function showGO(){mode='gameover';HS('hud');document.getElementById('tz').classList.remove('on');document.getElementById('pause-btn').style.display='none';submitScore(score,lvl);clearSave();checkForSave();SS('go');}
+function showWin(){mode='win';HS('hud');document.getElementById('tz').classList.remove('on');document.getElementById('pause-btn').style.display='none';submitScore(score,lvl);clearSave();document.getElementById('wsc').textContent=score+' pts';SS('gw');}
+function flashFn(color,anim){
+  const f=document.getElementById('flash');
+  f.style.background=color;f.style.animation='none';
+  void f.offsetHeight;f.style.animation=anim+' .4s ease-out forwards';
+}
+
+function continueGame(){
+  if(!currentPlayer){showNameScreen();return;}
+  const s=loadSave();
+  if(!s)return;
+  HS('ss');
+  lives=s.lives;score=s.score;lvl=s.lvl;
+  buildPools();buildLevel(lvl);mode='playing';
+  document.getElementById('hl').textContent=`Level ${lvl+1}: ${LEVEL_DEFS[lvl].name}`;
+  updateLives();document.getElementById('hs').textContent=score+' pts';
+  SS('hud');document.getElementById('tz').classList.add('on');
+  document.getElementById('pause-btn').style.display='flex';
+}
+function newGameForPlayer(){
+  if(!currentPlayer){showNameScreen();return;}
+  clearSave();
+  startGame();
+}
+function startGame(){
+  HS('ss');lives=3;score=0;lvl=0;
+  buildPools();buildLevel(0);mode='playing';
+  document.getElementById('hl').textContent=`Level 1: ${LEVEL_DEFS[0].name}`;
+  updateLives();document.getElementById('hs').textContent='0 pts';
+  SS('hud');document.getElementById('tz').classList.add('on');
+  document.getElementById('pause-btn').style.display='flex';
+}
+function restartGame(){HS('go');HS('gw');clearSave();startGame();}
+
+// ─── PLAYER PROFILES & SAVE/LOAD ─────────────────────────────────────────────
+// All data stored in localStorage under player-specific keys.
+// Keys: fsq_player (current player name)
+//       fsq_save_{name} (save data per player)
+//       fsq_scores (JSON array of {name,score,lvl,date} — top scores)
+
+const SAVE_VERSION='1.74';
+let currentPlayer=''; // set on name confirm
+
+function playerKey(suffix){ return 'fsq_'+suffix+'_'+currentPlayer; }
+
+// ── Player name management ────────────────────────────────────────────────────
+function initPlayer(){
+  // On load, restore last player or prompt for name
+  try{
+    const last=localStorage.getItem('fsq_player');
+    if(last){currentPlayer=last;updateHomePlayerName();checkForSave();}
+    else{showNameScreen();}
+  }catch(e){showNameScreen();}
+}
+function showNameScreen(){
+  HS('ss');SS('name-screen');
+  renderSavedPlayers();
+  const inp=document.getElementById('name-input');
+  if(inp) inp.value=currentPlayer||'';
+}
+function confirmName(){
+  const val=(document.getElementById('name-input').value||'').trim();
+  if(!val){document.getElementById('name-error').textContent='Please enter a name.';return;}
+  document.getElementById('name-error').textContent='';
+  currentPlayer=val;
+  try{localStorage.setItem('fsq_player',val);}catch(e){}
+  HS('name-screen');SS('ss');
+  updateHomePlayerName();
+  checkForSave();
+}
+function updateHomePlayerName(){
+  const el=document.getElementById('home-player-name');
+  if(el) el.textContent=currentPlayer||'—';
+}
+function renderSavedPlayers(){
+  const container=document.getElementById('saved-players');
+  if(!container)return;
+  // Find all player names from localStorage keys
+  const players=[];
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const k=localStorage.key(i);
+      if(k&&k.startsWith('fsq_save_')){
+        const name=k.replace('fsq_save_','');
+        const raw=localStorage.getItem(k);
+        if(raw){
+          try{
+            const d=JSON.parse(raw);
+            players.push({name,lvl:d.lvl||0,score:d.score||0});
+          }catch(e){}
+        }
+      }
+    }
+  }catch(e){}
+  if(!players.length){container.innerHTML='';return;}
+  container.innerHTML='<div style="color:#475569;font-size:.7rem;margin-bottom:8px;text-align:center;">Or continue as:</div>'+
+    players.map(p=>`<button class="btn out" onclick="switchPlayer('${p.name.replace(/'/g,"\\'")}');return false;" style="width:100%;margin-bottom:6px;font-size:.78rem;">
+      ${p.name} <span style="color:#4ade80;font-size:.7rem;">L${p.lvl+1} · ${p.score}pts</span>
+    </button>`).join('');
+}
+function switchPlayer(name){
+  currentPlayer=name;
+  try{localStorage.setItem('fsq_player',name);}catch(e){}
+  document.getElementById('name-input').value=name;
+  HS('name-screen');SS('ss');
+  updateHomePlayerName();
+  checkForSave();
+}
+
+// ── Save / Load ───────────────────────────────────────────────────────────────
+function saveGame(){
+  if(!currentPlayer)return false;
+  try{
+    const data={lvl,lives,score,v:SAVE_VERSION};
+    localStorage.setItem('fsq_save_'+currentPlayer,JSON.stringify(data));
+    return true;
+  }catch(e){return false;}
+}
+function loadSave(){
+  if(!currentPlayer)return null;
+  try{
+    const raw=localStorage.getItem('fsq_save_'+currentPlayer);
+    if(!raw)return null;
+    const d=JSON.parse(raw);
+    if(d.v!==SAVE_VERSION)return null;
+    return d;
+  }catch(e){return null;}
+}
+function clearSave(){
+  if(!currentPlayer)return;
+  try{localStorage.removeItem('fsq_save_'+currentPlayer);}catch(e){}
+}
+function checkForSave(){
+  const s=loadSave();
+  const btn=document.getElementById('continue-btn');
+  if(s&&btn){
+    btn.style.display='inline-block';
+    btn.textContent=`Continue as ${currentPlayer} · L${s.lvl+1} · ${s.score}pts · ${s.lives}♥`;
+  } else if(btn){
+    btn.style.display='none';
+  }
+}
+
+// ── Scoreboard ────────────────────────────────────────────────────────────────
+function submitScore(finalScore, finalLvl){
+  if(!currentPlayer)return;
+  try{
+    const raw=localStorage.getItem('fsq_scores')||'[]';
+    const scores=JSON.parse(raw);
+    scores.push({name:currentPlayer,score:finalScore,lvl:finalLvl,date:new Date().toLocaleDateString()});
+    // Keep top 20, sorted by score desc
+    scores.sort((a,b)=>b.score-a.score);
+    scores.splice(20);
+    localStorage.setItem('fsq_scores',JSON.stringify(scores));
+  }catch(e){}
+}
+function renderScoreboard(){
+  const el=document.getElementById('scoreboard-list');
+  if(!el)return;
+  try{
+    const raw=localStorage.getItem('fsq_scores')||'[]';
+    const scores=JSON.parse(raw);
+    if(!scores.length){
+      el.innerHTML='<p style="color:#334155;font-size:.78rem;text-align:center;">No scores yet — complete a game to appear here!</p>';
+      return;
+    }
+    el.innerHTML=scores.map((s,i)=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 14px;margin-bottom:6px;background:#0b1220;border-radius:8px;border:1px solid ${i===0?'rgba(240,192,64,.4)':'#1e293b'};">
+        <span style="color:${i===0?'#f0c040':i<3?'#94a3b8':'#475569'};font-size:.8rem;min-width:24px;">${i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`}</span>
+        <span style="color:#e2e8f0;font-size:.82rem;flex:1;margin:0 12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.name}</span>
+        <span style="color:#4ade80;font-size:.82rem;font-weight:700;margin-right:10px;">${s.score}pts</span>
+        <span style="color:#334155;font-size:.7rem;">L${s.lvl+1} · ${s.date}</span>
+      </div>`).join('');
+  }catch(e){
+    el.innerHTML='<p style="color:#f87171;font-size:.78rem;">Could not load scores.</p>';
+  }
+}
+
+// ─── PAUSE / RESUME / SKIP ────────────────────────────────────────────────────
+function pauseGame(){
+  if(mode!=='playing')return;
+  mode='paused';
+  document.getElementById('pause-btn').style.display='none';
+  document.getElementById('tz').classList.remove('on');
+  document.getElementById('pause-lvl-info').textContent=
+    `Level ${lvl+1}: ${LEVEL_DEFS[lvl].name} · Score: ${score} pts · Lives: ${lives}`;
+  // Auto-save on pause
+  const saved=saveGame();
+  document.getElementById('save-status').textContent=saved?'✓ Progress auto-saved':'';
+  HS('hud');SS('pause-screen');
+}
+function resumeGame(){
+  if(mode!=='paused')return;
+  mode='playing';
+  HS('pause-screen');SS('hud');
+  document.getElementById('pause-btn').style.display='flex';
+  document.getElementById('tz').classList.add('on');
+}
+function quitToMenu(){
+  saveGame(); // auto-save before leaving
+  mode='start';
+  HS('pause-screen');HS('hud');
+  document.getElementById('pause-btn').style.display='none';
+  document.getElementById('tz').classList.remove('on');
+  updateHomePlayerName();
+  checkForSave();
+  SS('ss');
+}
+// ─── SKIP SYSTEM (self-contained, no triggerQ/afterQ involvement) ───────────
+// State
+let skipQs=[];        // array of {qIdx, shuffled} — one entry per checkpoint
+let skipStep=0;       // which question we're on
+let skipShuffled=[];  // current shuffled option order
+let skipAnswered=false;
+let skipCorrect=false;
+
+function openSkip(){
+  // Called from the SKIP button directly during play — no confirm needed
+  if(mode!=='playing')return;
+  mode='paused'; // freeze the game
+  document.getElementById('tz').classList.remove('on');
+  HS('hud');
+  buildSkipQs();
+  showSkipQuestion();
+}
+
+function skipLevel(){
+  // Called from pause menu — game already paused
+  HS('pause-screen');
+  buildSkipQs();
+  showSkipQuestion();
+}
+
+function buildSkipQs(){
+  // Build question list: one per checkpoint, respecting difficulty tiers
+  skipQs=cpX.map((_,i)=>{
+    if(cpQIdx[i]===-1){
+      if(lvl===0){
+        cpQIdx[i]=0;
+      } else if(lvl<=4){
+        cpQIdx[i]=drawFromPool(emPool);
+      } else {
+        cpQIdx[i]=drawFromPool(mhPool);
+      }
+    }
+    return cpQIdx[i];
+  });
+  skipStep=0;
+}
+
+function showSkipQuestion(){
+  const total=skipQs.length;
+  const qIdx=skipQs[skipStep];
+  const q=QB[qIdx];
+  skipAnswered=false;
+  skipCorrect=false;
+  skipShuffled=shuffleArr([0,1,2,3]);
+
+  document.getElementById('skip-progress-label').textContent=
+    `Question ${skipStep+1} of ${total} · ${LEVEL_DEFS[lvl].name}`;
+  document.getElementById('skip-q-badge').textContent=
+    skipStep===0?'Checkpoint (Easy/Medium)':'Checkpoint (Medium/Hard)';
+  document.getElementById('skip-q-text').textContent=q.q;
+  document.getElementById('skip-q-expl').style.display='none';
+  document.getElementById('skip-q-expl').textContent='';
+  document.getElementById('skip-life-msg').textContent='';
+  document.getElementById('skip-next-btn').style.display='none';
+
+  const oc=document.getElementById('skip-q-opts');
+  oc.innerHTML='';
+  skipShuffled.forEach((origIdx,displayPos)=>{
+    const b=document.createElement('button');
+    b.className='qopt';
+    b.textContent=['A','B','C','D'][displayPos]+'. '+q.o[origIdx];
+    b.onclick=()=>skipAnswerQ(displayPos,b,q);
+    oc.appendChild(b);
+  });
+
+  SS('skip-screen');
+}
+
+function skipAnswerQ(displayPos,btn,q){
+  if(skipAnswered)return;
+  skipAnswered=true;
+  const allBtns=document.querySelectorAll('#skip-q-opts .qopt');
+  allBtns.forEach(b=>b.classList.add('disabled'));
+  const origIdx=skipShuffled[displayPos];
+  const correctDisplayPos=skipShuffled.indexOf(q.a);
+
+  if(origIdx===q.a){
+    btn.classList.add('correct');
+    skipCorrect=true;
+    document.getElementById('skip-q-expl').textContent=q.e;
+  } else {
+    btn.classList.add('wrong');
+    allBtns[correctDisplayPos].classList.add('correct');
+    skipCorrect=false;
+    lives--;updateLives();
+    const wrongExpl=q.oe?q.oe[origIdx]:q.e;
+    document.getElementById('skip-q-expl').textContent=wrongExpl+'\n\nCorrect answer: '+q.e;
+    if(lives<=0){
+      document.getElementById('skip-life-msg').textContent='No lives remaining!';
+      document.getElementById('skip-next-btn').textContent='See Result';
+    } else {
+      document.getElementById('skip-life-msg').textContent='Life lost! '+lives+' remaining.';
+      document.getElementById('skip-next-btn').textContent=skipStep<skipQs.length-1?'Next Question →':'Finish';
+    }
+  }
+
+  document.getElementById('skip-q-expl').style.display='block';
+  if(skipCorrect){
+    document.getElementById('skip-next-btn').textContent=
+      skipStep<skipQs.length-1?'Next Question →':'Finish Level';
+  }
+  document.getElementById('skip-next-btn').style.display='inline-block';
+}
+
+function skipNextAction(){
+  if(!skipCorrect && lives<=0){
+    HS('skip-screen');
+    showGO();
+    return;
+  }
+  // If wrong but lives remain, must retry — re-show same question
+  if(!skipCorrect){
+    showSkipQuestion(); // same skipStep, fresh attempt
+    return;
+  }
+  skipStep++;
+  if(skipStep>=skipQs.length){
+    // All questions done — complete the level (0 pts, score unchanged)
+    HS('skip-screen');
+    mode='playing'; // restore before showLC
+    document.getElementById('pause-btn').style.display='flex';
+    showLC();
+  } else {
+    showSkipQuestion();
+  }
+}
+
+// ─── MAIN LOOP ────────────────────────────────────────────────────────────
+let lastT=0;
+function loop(ts){
+  requestAnimationFrame(loop);
+  const dt=Math.min((ts-lastT)/16.67,3);lastT=ts;
+  ctx.clearRect(0,0,W,H);
+
+  if(mode==='playing'){
+    // Scroll camera — stop far past gate. Pause scrolling while player is dead
+    // so respawn position matches the checkpoint they came from.
+    const targetCam=gateX+W*1.5;
+    if(P.alive) camX=Math.min(camX+lvlSpd*dt, targetCam);
+
+    // Update mplat positions
+    const t=Date.now()/1000;
+    for(const mp of mplats) mp.wy=mp.base+Math.sin(t*mp.freq+mp.phase)*mp.amp;
+    for(const sb of sballs) sb._cy=sb.base+Math.sin(t*sb.freq+sb.phase)*sb.amp;
+
+    drawBg(lvl);
+    drawFloor();
+    drawMplats();
+    drawSballs();
+    for(const o of obs){
+      if(o.type==='s') drawSpike(o.wx,o.wy,o.w,o.h,false);
+      else if(o.type==='c') drawSpike(o.wx,o.wy,o.w,o.h,true);
+    }
+    drawCheckpoints();
+    drawGate();
+    drawPlayer();
+    drawParticles();
+
+    updatePhysics();
+
+    parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.12;p.l-=.033;});
+    parts=parts.filter(p=>p.l>0);
+
+    document.getElementById('hs').textContent=score+' pts';
+
+    // Progress bar — measures how far camera has scrolled toward the gate
+    // Full bar = gate is centered on screen (player is at it)
+    const prog=Math.min(1,(P.x+camX)/Math.max(1,gateX));
+    ctx.fillStyle='rgba(240,192,64,.1)';ctx.fillRect(0,HH,W*prog,3);
+    ctx.fillStyle='#f0c040';ctx.fillRect(Math.max(0,W*prog-2),HH,2,3);
+
+  } else {
+    drawBg(Math.min(lvl,9));
+    if(mode==='paused'){drawFloor();drawCheckpoints();drawGate();drawPlayer();}
+  }
+}
+
+window.addEventListener('resize',()=>{
+  W=canvas.width=innerWidth;H=canvas.height=innerHeight;
+  if(mode==='playing')buildLevel(lvl);
+});
+
+requestAnimationFrame(loop);
+initPlayer();
+</script>
+</body>
+</html>
